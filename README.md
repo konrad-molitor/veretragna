@@ -15,7 +15,7 @@ Nx monorepo with React 18 frontend and Express.js backend.
 ## Technologies
 
 - Frontend: React 18, React Router
-- Backend: Express.js
+- Backend: Express.js, TypeORM
 - Infrastructure: Docker, MySQL
 - Monorepo: Nx, Yarn
 
@@ -48,6 +48,35 @@ This will start:
 - MySQL in a Docker container (port 3306)
 - Frontend development server (port 4200)
 - Backend development server (port 3333)
+
+### Database and ORM
+
+TypeORM with MySQL is used for database operations. Database connection settings are stored in `.env` and `.env.local` files. Example settings:
+
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=password
+DB_NAME=veretragna
+```
+
+Entities:
+- BaseEntity - abstract class with fields: id, createdAt, updatedAt, deletedAt
+- ApiVersion - entity for storing API versions
+
+#### Database Setup
+
+1. Copy `.env.local` to create your own `.env` file:
+```bash
+cp .env.local .env
+```
+
+2. Modify values in `.env` if necessary
+3. Start the MySQL Docker container:
+```bash
+docker compose up -d
+```
 
 ## Additional Commands
 
