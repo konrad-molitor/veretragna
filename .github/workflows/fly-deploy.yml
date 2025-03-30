@@ -19,8 +19,17 @@ jobs:
           node-version: '20'
           cache: 'yarn'
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: Configure Yarn
+        run: |
+          yarn config set network-timeout 600000
+          yarn config set httpRetry 3
+          yarn config set httpTimeout 60000
+
+      - name: Install dependencies with retry
+        run: |
+          yarn install --frozen-lockfile --network-timeout 600000 || 
+          (sleep 5 && yarn install --frozen-lockfile --network-timeout 600000) || 
+          (sleep 10 && yarn install --frozen-lockfile --network-timeout 600000)
 
       - name: Verify Free Tier Compliance
         run: |
@@ -46,6 +55,6 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --dockerfile Dockerfile --build-target amd64
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} 
