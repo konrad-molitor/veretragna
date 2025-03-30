@@ -1,4 +1,5 @@
 import { Card, CardHeader, CardBody, CardFooter, Button, Divider } from '@heroui/react';
+import { StarIcon } from '@heroicons/react/24/solid';
 
 export function App() {
   const defaultContent =
@@ -6,10 +7,10 @@ export function App() {
 
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
       <Card className="max-w-md w-full heroui-card" shadow="lg" radius="lg">
         <CardHeader className="flex flex-col items-center gap-2 pb-2">
-          <h1 className="text-2xl font-bold text-center">
+          <h1 className="text-2xl font-bold text-center m-4">
             Welcome to Frontend!
           </h1>
           <p className="text-red-500 text-center text-sm">
@@ -18,9 +19,10 @@ export function App() {
         </CardHeader>
         <Divider />
         <CardBody className="py-4">
-          <p className="text-center text-gray-700">
-            This project is using HeroUI!
-          </p>
+          <div className="flex items-center justify-center gap-2 text-gray-700">
+            <StarIcon className="h-6 w-6 text-yellow-500" />
+            <p>This project uses HeroIcons!</p>
+          </div>
         </CardBody>
         <Divider />
         <CardFooter className="flex justify-center pt-2">

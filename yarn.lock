@@ -1268,6 +1268,11 @@
   dependencies:
     tslib "^2.8.0"
 
+"@heroicons/react@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-2.2.0.tgz#0c05124af50434a800773abec8d3af6a297d904b"
+  integrity sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==
+
 "@heroui/accordion@2.2.13":
   version "2.2.13"
   resolved "https://registry.yarnpkg.com/@heroui/accordion/-/accordion-2.2.13.tgz#84b6ef9bf1b9a03c7b2b94ee0a044d731ecb0dcd"
