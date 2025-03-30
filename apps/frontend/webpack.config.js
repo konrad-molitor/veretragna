@@ -13,6 +13,12 @@ module.exports = {
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
+    proxy: [{
+      context: ['/api'],
+      target: 'http://localhost:3333',
+      secure: false,
+      changeOrigin: true
+    }]
   },
   plugins: [
     new NxAppWebpackPlugin({

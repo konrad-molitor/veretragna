@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardBody, CardFooter, Button, Divider } from '@heroui/react';
 import { StarIcon } from '@heroicons/react/24/solid';
+import HealthCheck from '../components/HealthCheck';
 
 export function App() {
   const defaultContent =
@@ -31,6 +32,7 @@ export function App() {
           </Button>
         </CardFooter>
       </Card>
+      <HealthCheck />
     </div>
   );
 }
