@@ -1,0 +1,38 @@
+# fly.toml app configuration file generated for veretragna-mysql on 2025-03-30T16:47:49-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'veretragna-mysql'
+primary_region = 'mia'
+
+[build]
+  image = 'mysql:8'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  cpus = 1
+  memory = "256mb"
+
+[env]
+  MYSQL_DATABASE="veretragna"
+  MYSQL_USER="veretragna_user"
+
+[processes]
+  app = """--datadir /data/mysql \
+    --default-authentication-plugin mysql_native_password \
+    --performance-schema=0 \
+    --innodb-buffer-pool-size=64M \
+    --max-connections=10"""
+
+[mounts]
+  source = "mysqldata"
+  destination = "/data"
