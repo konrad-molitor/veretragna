@@ -1,3 +1,60 @@
+# Veretragna
+
+Nx monorepo with React 18 frontend and Express.js backend.
+
+## Project Structure
+
+```
+/apps
+  /backend   - Express.js API
+    /src
+  /frontend  - React 18 application
+    /src
+```
+
+## Technologies
+
+- Frontend: React 18, React Router
+- Backend: Express.js
+- Infrastructure: Docker, MySQL
+- Monorepo: Nx, Yarn
+
+## Installation and Launch
+
+### Requirements
+
+- Node.js (LTS version recommended)
+- Yarn
+- Docker and Docker Compose
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+yarn install
+```
+
+### Launch
+
+To run the entire application in development mode:
+
+```bash
+docker compose up -d && yarn run dev
+```
+
+This will start:
+- MySQL in a Docker container (port 3306)
+- Frontend development server (port 4200)
+- Backend development server (port 3333)
+
+## Additional Commands
+
+- `nx run frontend:serve` - run frontend only
+- `nx run backend:serve` - run backend only
+- `docker compose down` - stop MySQL container
+
 # 
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
