@@ -12,7 +12,7 @@ export function App() {
       <Card className="max-w-md w-full heroui-card" shadow="lg" radius="lg">
         <CardHeader className="flex flex-col items-center gap-2 pb-2">
           <h1 className="text-2xl font-bold text-center m-4">
-            Welcome to Veretragna!
+            Welcome to Veretragna App!
           </h1>
           <p className="text-red-500 text-center text-sm">
             This project is using Tailwind CSS v3.4 and HeroUI
