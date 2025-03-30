@@ -10,7 +10,6 @@ import dataSource from './config/database.config';
 import apiVersionRouter from './api-version/api-version.controller';
 import cors from 'cors';
 
-// Инициализация TypeORM
 const initializeApp = async () => {
   try {
     await dataSource.initialize();
@@ -37,7 +36,7 @@ const initializeApp = async () => {
       res.send({ backend: true, database: dataSource.isInitialized });
     });
 
-    // API роуты
+    // API routes
     app.use('/api/versions', apiVersionRouter);
 
     // Serve static files from backend assets directory
