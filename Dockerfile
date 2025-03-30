@@ -20,10 +20,18 @@ RUN yarn install --frozen-lockfile --network-timeout 600000 || \
 # Copy application source
 COPY . .
 
-# Build both frontend and backend with reduced memory usage
+# Build both frontend and backend with reduced memory usage and NO NX DAEMON
 ENV NODE_OPTIONS="--max-old-space-size=2048"
-RUN yarn nx build frontend || (sleep 5 && yarn nx build frontend)
-RUN yarn nx build backend || (sleep 5 && yarn nx build backend)
+ENV NX_DAEMON=false
+ENV NX_SKIP_NX_CACHE=true
+
+# Build frontend
+RUN yarn nx build frontend --skip-nx-cache || \
+    (sleep 5 && yarn nx build frontend --skip-nx-cache)
+
+# Build backend
+RUN yarn nx build backend --skip-nx-cache || \
+    (sleep 5 && yarn nx build backend --skip-nx-cache)
 
 # Production image
 FROM --platform=linux/amd64 node:20-alpine
