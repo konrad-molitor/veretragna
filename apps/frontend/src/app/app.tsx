@@ -1,50 +1,25 @@
 // Uncomment this line to use CSS modules
-// import styles from './app.module.css';
+import styles from './app.module.css';
 import NxWelcome from './nx-welcome';
 
 import { Route, Routes, Link } from 'react-router-dom';
 
 export function App() {
   return (
-    <div>
-      <NxWelcome title="frontend" />
-
-      {/* START: routes */}
-      {/* These routes and navigation have been generated for you */}
-      {/* Feel free to move and update them to fit your needs */}
-      <br />
-      <hr />
-      <br />
-      <div role="navigation">
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/page-2">Page 2</Link>
-          </li>
-        </ul>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-4">
+          Welcome to Frontend!
+        </h1>
+        <p className="text-red-500 text-center mb-6">
+          This project is using Tailwind CSS v3.4
+        </p>
+        <div className="flex justify-center">
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors">
+            Get Started
+          </button>
+        </div>
       </div>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div>
-              This is the generated root route.{' '}
-              <Link to="/page-2">Click here for page 2.</Link>
-            </div>
-          }
-        />
-        <Route
-          path="/page-2"
-          element={
-            <div>
-              <Link to="/">Click here to go back to root page.</Link>
-            </div>
-          }
-        />
-      </Routes>
-      {/* END: routes */}
     </div>
   );
 }
