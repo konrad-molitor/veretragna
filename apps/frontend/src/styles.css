@@ -3,3 +3,27 @@
 @tailwind utilities;
 
 /* You can add global styles to this file, and also import other style files */
+
+/* Global application styles */
+:root {
+  --heroui-foreground: 0 0 0;
+  --heroui-background: 255 255 255;
+  --heroui-primary: 33 150 243;
+  --heroui-primary-foreground: 255 255 255;
+  --heroui-border: 229 231 235;
+  --heroui-radius: 0.5rem;
+}
+
+/* Basic styles for cards */
+.heroui-card {
+  background-color: white;
+  border-radius: var(--heroui-radius);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Basic styles for buttons */
+.heroui-button {
+  font-weight: 500;
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 150ms;
+}
