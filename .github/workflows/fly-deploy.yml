@@ -1,0 +1,51 @@
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Verify Free Tier Compliance
+        run: |
+          echo "Checking fly.toml for free tier compliance..."
+          VM_MEMORY=$(grep -oP 'memory\s*=\s*"\K[^"]*' fly.toml)
+          MIN_MACHINES=$(grep -oP 'min_machines_running\s*=\s*\K\d+' fly.toml)
+          
+          if [[ "$VM_MEMORY" != "256mb" ]]; then
+            echo "⚠️ Warning: VM memory is configured to $VM_MEMORY. Free tier only supports 256mb."
+            echo "Consider updating memory configuration to stay within free tier limits."
+          else
+            echo "✅ VM memory configuration ($VM_MEMORY) complies with free tier."
+          fi
+          
+          if [[ "$MIN_MACHINES" -gt 0 ]]; then
+            echo "⚠️ Warning: min_machines_running is set to $MIN_MACHINES."
+            echo "To minimize costs, consider setting min_machines_running=0 to allow all machines to stop when not in use."
+          else
+            echo "✅ min_machines_running configuration ($MIN_MACHINES) is cost-optimized."
+          fi
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} 
