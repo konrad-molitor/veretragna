@@ -8,7 +8,6 @@ import reactPlugin from "eslint-plugin-react";
 import hooksPlugin from "eslint-plugin-react-hooks";
 import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
 
-// Эмулируем __dirname для ES модулей
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -19,7 +18,7 @@ const compat = new FlatCompat({
     plugins: ['@typescript-eslint'],
 });
 
-// Функция для очистки ключей объекта от пробелов
+// Helper function to trim whitespace from object keys
 const trimGlobalKeys = (globalsObj) => {
   return Object.fromEntries(
     Object.entries(globalsObj).map(([key, value]) => [key.trim(), value])
@@ -27,16 +26,12 @@ const trimGlobalKeys = (globalsObj) => {
 };
 
 export default [
-  // Базовая конфигурация JS
   js.configs.recommended,
-  // Конфигурация TypeScript
   ...tseslint.configs.recommended,
-  // Конфигурация Airbnb (через FlatCompat)
   ...compat.extends(
     "airbnb",
     "plugin:jsx-a11y/recommended"
   ),
-  // Конфигурация React плагинов (рекомендуемый способ для Flat Config)
   {
     files: ["**/*.{jsx,tsx}"],
     plugins: {
@@ -62,7 +57,6 @@ export default [
       },
     },
   },
-  // Общие настройки и переопределения для всего проекта frontend
   {
     languageOptions: {
       ecmaVersion: "latest",
@@ -102,7 +96,7 @@ export default [
       }
     }
   },
-  // --- Добавляем блок для ТЕСТОВЫХ файлов ---
+  // Configuration block for TEST files
   {
       files: ['**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}'],
       languageOptions: {
@@ -114,7 +108,7 @@ export default [
           'prefer-regex-literals': 'off',
       }
   },
-  // --- Добавляем блок для JS файлов ---
+  // Configuration block for JS files
   {
     files: ['**/*.js', '**/*.cjs'],
     rules: {

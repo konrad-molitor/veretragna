@@ -4,7 +4,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import tseslint from 'typescript-eslint';
 
-// Эмулируем __dirname для ES модулей
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -16,13 +15,9 @@ const compat = new FlatCompat({
 });
 
 export default [
-  // Базовая конфигурация JS (от js.configs.recommended)
   js.configs.recommended,
-  // Конфигурация TypeScript (от tseslint.configs.recommended)
   ...tseslint.configs.recommended,
-  // Конфигурация Airbnb Base (через FlatCompat)
   ...compat.extends("airbnb-base"),
-  // Общие настройки и переопределения
   {
     languageOptions: {
       ecmaVersion: "latest",
