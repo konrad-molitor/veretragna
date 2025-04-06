@@ -26,6 +26,12 @@
       "options": {
         "passWithNoTests": true
       }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["apps/backend/**/*.{ts,tsx,js,jsx}"]
+      }
     }
   }
 }

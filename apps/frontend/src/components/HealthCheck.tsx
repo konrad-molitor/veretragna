@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 import axios from 'axios';
 
-export const HealthCheck = () => {
+export function HealthCheck() {
   const [isBackendConnected, setIsBackendConnected] = useState<boolean | null>(null);
   const [isDatabaseConnected, setIsDatabaseConnected] = useState<boolean | null>(null);
 
@@ -20,10 +20,10 @@ export const HealthCheck = () => {
     };
 
     checkHealth();
-    
+
     // Check every 30 seconds
     const interval = setInterval(checkHealth, 30000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -41,7 +41,7 @@ export const HealthCheck = () => {
         )}
         <span className="text-sm font-medium">Veretragna Server</span>
       </div>
-      
+
       <div className="flex items-center gap-2">
         {isDatabaseConnected ? (
           <CheckCircleIcon className="h-5 w-5 text-green-500" />
@@ -52,6 +52,6 @@ export const HealthCheck = () => {
       </div>
     </div>
   );
-};
+}
 
-export default HealthCheck; 
+export default HealthCheck;

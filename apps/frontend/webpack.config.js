@@ -17,8 +17,8 @@ module.exports = {
       context: ['/api'],
       target: 'http://localhost:3333',
       secure: false,
-      changeOrigin: true
-    }]
+      changeOrigin: true,
+    }],
   },
   plugins: [
     new NxAppWebpackPlugin({
@@ -29,8 +29,8 @@ module.exports = {
       baseHref: '/',
       assets: ['./src/favicon.ico', './src/assets'],
       styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
+      outputHashing: process.env.NODE_ENV === 'production' ? 'all' : 'none',
+      optimization: process.env.NODE_ENV === 'production',
     }),
     new NxReactWebpackPlugin({
       // Uncomment this line if you don't want to use SVGR
