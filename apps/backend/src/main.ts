@@ -45,7 +45,7 @@ const initializeApp = async () => {
     // In production, serve the frontend static files
     if (process.env.NODE_ENV === 'production') {
       // Serve frontend static files
-      const frontendPath = path.join(__dirname, '..', '..', 'frontend');
+      const frontendPath = path.join(__dirname, '..', 'frontend');
       app.use(express.static(frontendPath));
       
       // Handle all other routes by serving the index.html (for SPA routing)
@@ -57,9 +57,14 @@ const initializeApp = async () => {
       });
     }
 
-    const port = process.env.PORT || 3333;
-    const server = app.listen(port, () => {
-      console.log(`Listening at http://localhost:${port}/api`);
+    const port = parseInt(process.env.PORT || '3333', 10);
+    const server = app.listen(port, '0.0.0.0', () => {
+      const address = server.address();
+      if (address && typeof address !== 'string') {
+        console.log(`Listening at http://${address.address}:${address.port}`);
+      } else {
+        console.log(`Listening on port ${port} (host 0.0.0.0)`);
+      }
     });
     server.on('error', console.error);
   } catch (error) {

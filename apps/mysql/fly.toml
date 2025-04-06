@@ -9,30 +9,22 @@ primary_region = 'mia'
 [build]
   image = 'mysql:8'
 
-[http_service]
-  internal_port = 8080
-  force_https = true
-  auto_stop_machines = 'stop'
-  auto_start_machines = true
-  min_machines_running = 1
-  processes = ['app']
-
 [[vm]]
   size = 'shared-cpu-1x'
   cpus = 1
-  memory = "256mb"
-
-[env]
-  MYSQL_DATABASE="veretragna"
-  MYSQL_USER="veretragna_user"
+  memory = "512mb"
 
 [processes]
   app = """--datadir /data/mysql \
-    --default-authentication-plugin mysql_native_password \
-    --performance-schema=0 \
-    --innodb-buffer-pool-size=64M \
-    --max-connections=10"""
+    --mysql-native-password=ON \
+    --max_connections=10 \
+    --performance_schema=0 \
+    --innodb_buffer_pool_size=16M"""
 
 [mounts]
   source = "mysqldata"
   destination = "/data"
+
+[env]
+  MYSQL_DATABASE="veretragna"
+  MYSQL_USER="veretragna_user"
