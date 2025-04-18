@@ -2,20 +2,15 @@ FROM --platform=linux/amd64 node:20-alpine as builder
 
 WORKDIR /app
 
-# Configure yarn with increased timeouts and network settings
-RUN yarn config set network-timeout 600000 && \
-    yarn config set httpRetry 3 && \
-    yarn config set httpTimeout 60000
+# Enable Corepack and prepare yarn
+RUN corepack enable && corepack prepare yarn@4.9.1 --activate
 
-# Copy package.json and yarn.lock
-COPY package.json yarn.lock ./
+# Copy package.json, yarn.lock and yarn configuration
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
-COPY .yarnrc ./
 
-# Install dependencies with increased timeout
-RUN yarn install --frozen-lockfile --network-timeout 600000 || \
-    (sleep 5 && yarn install --frozen-lockfile --network-timeout 600000) || \
-    (sleep 10 && yarn install --frozen-lockfile --network-timeout 600000)
+# Install dependencies
+RUN yarn install
 
 # Copy application source
 COPY . .
@@ -38,20 +33,15 @@ FROM --platform=linux/amd64 node:20-alpine
 
 WORKDIR /app
 
-# Configure yarn with increased timeouts
-RUN yarn config set network-timeout 600000 && \
-    yarn config set httpRetry 3 && \
-    yarn config set httpTimeout 60000
+# Enable Corepack and prepare yarn
+RUN corepack enable && corepack prepare yarn@4.9.1 --activate
 
-# Copy package.json and yarn.lock
-COPY package.json yarn.lock ./
+# Copy package.json, yarn.lock and yarn configuration
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
-COPY .yarnrc ./
 
-# Install production dependencies only with increased timeout
-RUN yarn install --frozen-lockfile --production --network-timeout 600000 || \
-    (sleep 5 && yarn install --frozen-lockfile --production --network-timeout 600000) || \
-    (sleep 10 && yarn install --frozen-lockfile --production --network-timeout 600000)
+# Install production dependencies only
+RUN yarn install --production
 
 # Copy built applications from builder stage
 COPY --from=builder /app/dist ./dist
