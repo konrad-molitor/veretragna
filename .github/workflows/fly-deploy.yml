@@ -25,15 +25,15 @@ jobs:
 
       - name: Configure Yarn
         run: |
-          yarn config set networkTimeout 600000
+          yarn config set networkTtl 600000
           yarn config set httpRetry 3
           yarn config set httpTimeout 60000
 
       - name: Install dependencies with retry
         run: |
-          yarn install --frozen-lockfile --network-timeout 600000 || 
-          (sleep 5 && yarn install --frozen-lockfile --network-timeout 600000) || 
-          (sleep 10 && yarn install --frozen-lockfile --network-timeout 600000)
+          yarn install --immutable || 
+          (sleep 5 && yarn install --immutable) || 
+          (sleep 10 && yarn install --immutable)
 
       - name: Verify Free Tier Compliance
         run: |
