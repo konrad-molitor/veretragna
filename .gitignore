@@ -8,6 +8,12 @@ out-tsc
 # dependencies
 node_modules
 
+# Yarn Berry
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+.pnp.*
+
 # IDEs and editors
 /.idea
 .project

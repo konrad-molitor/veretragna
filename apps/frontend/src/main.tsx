@@ -12,10 +12,10 @@ const root = ReactDOM.createRoot(container as HTMLElement);
 
 root.render(
   <StrictMode>
-    <BrowserRouter>
-      <HeroUIProvider>
+    <HeroUIProvider>
+      <BrowserRouter>
         <App />
-      </HeroUIProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </HeroUIProvider>
   </StrictMode>,
 );
