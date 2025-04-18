@@ -9,6 +9,7 @@ import * as path from 'path';
 import cors from 'cors';
 import dataSource from './config/database.config';
 import apiVersionRouter from './api-version/api-version.controller';
+import userRouter from './users/user.controller';
 
 const initializeApp = async () => {
   try {
@@ -36,6 +37,7 @@ const initializeApp = async () => {
     });
 
     app.use('/api/versions', apiVersionRouter);
+    app.use('/api/users', userRouter);
 
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
 

@@ -19,6 +19,11 @@ jobs:
           node-version: '20'
           cache: 'yarn'
 
+      - name: Install and enable Corepack
+        run: |
+          npm install -g corepack
+          corepack enable
+
       - name: Configure Yarn
         run: |
           yarn config set network-timeout 600000
