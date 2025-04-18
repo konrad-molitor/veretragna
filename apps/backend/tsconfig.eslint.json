@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "**/*.mjs",
+    "**/*.cjs",
+     "jest.config.ts",
+     "webpack.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+} 

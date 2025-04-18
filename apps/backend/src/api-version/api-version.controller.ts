@@ -35,7 +35,7 @@ apiVersionRouter.post('/', async (req: Request, res: Response) => {
     const apiVersion = new ApiVersion();
     apiVersion.version = version;
     apiVersion.description = description;
-    
+
     await apiVersion.save();
     return res.status(201).json(apiVersion);
   } catch (error) {
@@ -44,4 +44,4 @@ apiVersionRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
-export default apiVersionRouter; 
+export default apiVersionRouter;

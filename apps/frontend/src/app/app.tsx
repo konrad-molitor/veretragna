@@ -1,11 +1,11 @@
-import { Card, CardHeader, CardBody, CardFooter, Button, Divider } from '@heroui/react';
+import {
+  Card, CardHeader, CardBody, CardFooter, Button, Divider,
+} from '@heroui/react';
 import { StarIcon } from '@heroicons/react/24/solid';
 import HealthCheck from '../components/HealthCheck';
 
 export function App() {
-  const defaultContent =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
-
+  const defaultContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">

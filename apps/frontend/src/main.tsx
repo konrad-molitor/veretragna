@@ -17,5 +17,5 @@ root.render(
         <App />
       </HeroUIProvider>
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );
