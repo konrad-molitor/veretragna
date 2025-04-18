@@ -13,20 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js with Corepack
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
-
-      - name: Install and enable Corepack
-        run: |
-          npm install -g corepack
-          corepack enable
+          corepack: true
 
       - name: Configure Yarn
         run: |
-          yarn config set network-timeout 600000
+          corepack prepare yarn@4.9.1 --activate
+          yarn config set networkTimeout 600000
           yarn config set httpRetry 3
           yarn config set httpTimeout 60000
 
