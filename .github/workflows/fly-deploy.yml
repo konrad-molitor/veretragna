@@ -18,22 +18,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Enable Corepack
+      - name: Enable Corepack and Install Dependencies
         run: |
           corepack enable
           corepack prepare yarn@4.9.1 --activate
-
-      - name: Configure Yarn
-        run: |
-          yarn config set networkTtl 600000
-          yarn config set httpRetry 3
-          yarn config set httpTimeout 60000
-
-      - name: Install dependencies with retry
-        run: |
-          yarn install --immutable || 
-          (sleep 5 && yarn install --immutable) || 
-          (sleep 10 && yarn install --immutable)
+          yarn install
 
       - name: Verify Free Tier Compliance
         run: |
