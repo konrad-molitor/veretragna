@@ -40,8 +40,9 @@ RUN corepack enable && corepack prepare yarn@4.9.1 --activate
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
 
-# Install production dependencies only
-RUN yarn install --production
+# Install production dependencies only using modern syntax for Yarn 4
+ENV NODE_ENV=production
+RUN yarn install
 
 # Copy built applications from builder stage
 COPY --from=builder /app/dist ./dist
