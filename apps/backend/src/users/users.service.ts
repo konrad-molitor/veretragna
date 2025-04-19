@@ -1,21 +1,12 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Resend } from 'resend';
 import { User, UserStatus } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { mailerService } from '../mailer/mailer.service';
 
 class UserService {
-  private readonly RESEND_API_KEY: string;
-
-  private readonly resend: Resend;
-
-  constructor() {
-    this.RESEND_API_KEY = process.env.RESEND_API_KEY;
-    this.resend = new Resend(process.env.RESEND_API_KEY);
-  }
-
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const {
       email, firstName, lastName, password,
@@ -44,8 +35,8 @@ class UserService {
 
     await user.save();
 
-    // Send confirmation email
-    await this.sendConfirmationEmail(email, otpCode);
+    // Send confirmation email using mailer service
+    await mailerService.sendConfirmationEmail(email, otpCode);
 
     return user;
   }
@@ -142,56 +133,6 @@ class UserService {
     }
 
     return user;
-  }
-
-  private async sendConfirmationEmail(email: string, otpCode: string): Promise<void> {
-    try {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-      const confirmationLink = `${frontendUrl}/confirm?code=${otpCode}`;
-      const isDevelopment = process.env.NODE_ENV === 'development';
-
-      // Use test email in development mode
-      const fromEmail = isDevelopment 
-        ? 'onboarding@resend.dev' 
-        : 'no-reply@veretragna.com';
-        
-      const emailContent = `
-        <h1>Registration Confirmation</h1>
-        <p>To complete your registration, please follow this link:</p>
-        <p><a href="${confirmationLink}">${confirmationLink}</a></p>
-        <p>If you did not register on our site, please ignore this email.</p>
-      `;
-
-      // In development mode, we can log email information to the console
-      if (isDevelopment) {
-        console.log('\n--- Email would be sent ---');
-        console.log(`From: Veretragna <${fromEmail}>`);
-        console.log(`To: ${email}`);
-        console.log('Subject: Registration Confirmation');
-        console.log('Content:', emailContent);
-        console.log('Confirmation Link:', confirmationLink);
-        console.log('OTP Code:', otpCode);
-        console.log('------------------------\n');
-      }
-
-      // Send email via Resend
-      await this.resend.emails.send({
-        from: `Veretragna <${fromEmail}>`,
-        to: email,
-        subject: 'Registration Confirmation',
-        html: emailContent,
-      });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      
-      // In development mode, we can continue without blocking the registration process due to email sending failure
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Email sending failed, but continuing in development mode');
-        return;
-      }
-      
-      throw new Error('Failed to send confirmation email');
-    }
   }
 }
 
