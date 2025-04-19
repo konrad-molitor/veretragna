@@ -31,7 +31,7 @@ userRouter.post('/', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error creating user:', error);
-    return res.status(400).json({ error: error.message || 'Failed to create user' });
+    return res.status(400).json({ error: error.message || 'Error al crear el usuario' });
   }
 });
 
@@ -41,17 +41,27 @@ userRouter.get('/confirm', async (req: Request, res: Response) => {
     const { code } = req.query;
 
     if (!code || typeof code !== 'string') {
-      return res.status(400).json({ error: 'Confirmation code is missing' });
+      return res.status(400).json({ error: 'El código de confirmación está faltando' });
     }
 
-    await userService.confirmUser(code);
+    // Confirm user and get token
+    const { user, token } = await userService.confirmUserAndLogin(code);
 
-    // Redirect to login page
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-    return res.redirect(`${frontendUrl}/login?confirmed=true`);
+    // Return user data and token instead of redirecting
+    return res.json({
+      message: 'Registro confirmado correctamente. Ya puedes iniciar sesión.',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        type: user.type,
+      },
+      token,
+    });
   } catch (error) {
     console.error('Error confirming registration:', error);
-    return res.status(400).json({ error: error.message || 'Failed to confirm registration' });
+    return res.status(400).json({ error: error.message || 'Error al confirmar el registro' });
   }
 });
 
@@ -79,7 +89,7 @@ userRouter.post('/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error during login:', error);
-    return res.status(401).json({ error: error.message || 'Authentication error' });
+    return res.status(401).json({ error: error.message || 'Error al iniciar sesión' });
   }
 });
 
@@ -109,7 +119,7 @@ userRouter.patch('/:id', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error updating user:', error);
-    return res.status(400).json({ error: error.message || 'Failed to update user data' });
+    return res.status(400).json({ error: error.message || 'Error al actualizar los datos del usuario' });
   }
 });
 
@@ -129,7 +139,7 @@ userRouter.get('/', async (req: Request, res: Response) => {
     })));
   } catch (error) {
     console.error('Error getting users:', error);
-    return res.status(500).json({ error: 'Failed to get user list' });
+    return res.status(500).json({ error: 'Error al obtener la lista de usuarios' });
   }
 });
 
@@ -151,7 +161,7 @@ userRouter.get('/:id', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error getting user:', error);
-    return res.status(404).json({ error: error.message || 'User not found' });
+    return res.status(404).json({ error: error.message || 'Usuario no encontrado' });
   }
 });
 
