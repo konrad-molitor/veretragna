@@ -37,7 +37,7 @@ class UserService {
     // Generate random bytes and convert to a hexadecimal string
     const randomBytes = crypto.randomBytes(Math.ceil(length / 2));
     const hexString = randomBytes.toString('hex').slice(0, length);
-    
+
     // Convert to uppercase for better readability
     return hexString.toUpperCase();
   }
@@ -171,6 +171,11 @@ class UserService {
     return this.findUserById(id);
   }
 
+  // Get current user profile
+  async getCurrentUser(id: string): Promise<User> {
+    return this.findUserById(id);
+  }
+
   async initResetPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
     const { email } = forgotPasswordDto;
     const user = await this.findUserByEmail(email);
@@ -206,7 +211,7 @@ class UserService {
 
     // Hash the new password
     user.passwordHash = await bcrypt.hash(newPassword, 10);
-    
+
     // Clear reset code
     user.passwordResetCode = null;
 

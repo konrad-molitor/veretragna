@@ -9,7 +9,8 @@ export enum UserStatus {
 
 export enum UserType {
   USER = 'user',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
+  DRIVER = 'driver',
 }
 
 @Entity('users')

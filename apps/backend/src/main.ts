@@ -10,6 +10,7 @@ import cors from 'cors';
 import dataSource from './config/database.config';
 import apiVersionRouter from './api-version/api-version.controller';
 import userRouter from './users/user.controller';
+import { authenticate } from './common/middlewares/auth.middleware';
 
 const initializeApp = async () => {
   try {
@@ -27,6 +28,7 @@ const initializeApp = async () => {
 
     app.use(cors(corsOptions));
     app.use(express.json());
+    app.use(authenticate);
 
     app.get('/api', (req, res) => {
       res.send({ message: 'Welcome to backend!' });

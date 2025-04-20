@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button, Input } from '@heroui/react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 type AuthFormProps = {
   onClose: () => void;
@@ -9,6 +10,7 @@ type AuthFormProps = {
 };
 
 export function AuthForm({ onClose, visible }: AuthFormProps) {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -89,8 +91,8 @@ export function AuthForm({ onClose, visible }: AuthFormProps) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
 
-        // Redirect or update UI as needed
-        window.location.href = '/dashboard'; // or use React Router navigation
+        // Redirect to dashboard using React Router
+        navigate('/dashboard');
       } else {
         // Signup request
         const response = await axios.post('/api/users', {
