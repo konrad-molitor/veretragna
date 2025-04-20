@@ -19,4 +19,4 @@ export const passwordResetTemplate = `<h1>Solicitud de Restablecimiento de Contr
 
 <p>Si no has solicitado el restablecimiento de contraseña, por favor ignora este correo o contacta con soporte si tienes preocupaciones sobre la seguridad de tu cuenta.</p>
 
-<p>Saludos cordiales,<br>El Equipo de Veretragna</p>`; 
+<p>Saludos cordiales,<br>El Equipo de Veretragna</p>`;

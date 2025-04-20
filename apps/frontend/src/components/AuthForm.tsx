@@ -41,7 +41,7 @@ export function AuthForm({ onClose, visible }: AuthFormProps) {
 
   const validateForm = () => {
     if (!formData.email) return 'El correo electrónico es obligatorio';
-    
+
     if (!isForgotPassword && !formData.password) return 'La contraseña es obligatoria';
 
     if (!isLogin && !isForgotPassword) {
@@ -121,19 +121,19 @@ export function AuthForm({ onClose, visible }: AuthFormProps) {
       <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
         Recuperar Contraseña
       </h2>
-      
+
       {successMessage && (
         <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-md text-sm">
           {successMessage}
         </div>
       )}
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="w-full">
         <div className="space-y-4">
           <Input

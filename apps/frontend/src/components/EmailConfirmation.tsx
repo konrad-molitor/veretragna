@@ -126,7 +126,7 @@ export function EmailConfirmation(): React.ReactElement {
         </div>
         <p className="mb-6 text-gray-600">
           Será redirigido al panel de control en
-          {5 - Math.floor((redirectProgress / 100) * 5)}
+          {` ${5 - Math.floor((redirectProgress / 100) * 5)} `}
           segundos...
         </p>
         <Progress

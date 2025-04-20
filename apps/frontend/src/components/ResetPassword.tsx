@@ -226,4 +226,4 @@ export function ResetPassword(): React.ReactElement {
   );
 }
 
-export default ResetPassword; 
+export default ResetPassword;

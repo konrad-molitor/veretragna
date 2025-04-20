@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { User, UserStatus } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -31,6 +32,16 @@ class UserService {
     }
   }
 
+  // Utility method to generate secure random codes
+  private generateSecureCode(length = 6): string {
+    // Generate random bytes and convert to a hexadecimal string
+    const randomBytes = crypto.randomBytes(Math.ceil(length / 2));
+    const hexString = randomBytes.toString('hex').slice(0, length);
+    
+    // Convert to uppercase for better readability
+    return hexString.toUpperCase();
+  }
+
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const {
       email, firstName, lastName, password,
@@ -43,7 +54,7 @@ class UserService {
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Generate OTP code for email confirmation
-    const otpCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const otpCode = this.generateSecureCode();
 
     // Create new user
     const user = new User();
@@ -174,7 +185,7 @@ class UserService {
     }
 
     // Generate reset code
-    const passwordResetCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const passwordResetCode = this.generateSecureCode();
 
     // Update user record
     user.passwordResetCode = passwordResetCode;
