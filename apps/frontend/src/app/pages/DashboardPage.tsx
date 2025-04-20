@@ -5,6 +5,7 @@ import AdminDashboard from '../../components/admin-dashboard/AdminDashboard';
 import UserDashboard from '../../components/user-dashboard/UserDashboard';
 import DriverDashboard from '../../components/driver-dashboard/DriverDashboard';
 import UserProfile from '../../components/user-profile/UserProfile';
+import HealthCheck from '../../components/HealthCheck';
 
 type UserData = {
   id: string;
@@ -56,6 +57,7 @@ export function DashboardPage({ contentType = 'dashboard' }: DashboardPageProps)
   return (
     <DashboardLayout>
       {renderContent()}
+      <HealthCheck />
     </DashboardLayout>
   );
 }

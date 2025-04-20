@@ -10,7 +10,7 @@ import {
   Divider,
   User,
 } from '@heroui/react';
-import { ArrowLeftCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftCircleIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../app/utils/axiosInstance';
 
@@ -25,6 +25,12 @@ type UserData = {
   email: string;
   type: string;
   status: string;
+};
+
+const userTypeMap = {
+  admin: 'Administrador',
+  driver: 'Conductor',
+  user: 'Usuario',
 };
 
 export function UserProfile({ userId }: UserProfileProps) {
@@ -128,7 +134,7 @@ export function UserProfile({ userId }: UserProfileProps) {
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Perfil de Usuario</h1>
 
         <Card>
-          <CardHeader className="flex gap-3">
+          <CardHeader className="flex gap-3 p-4">
             <User
               name={`${user?.firstName} ${user?.lastName}`}
               description={user?.email}
@@ -142,35 +148,31 @@ export function UserProfile({ userId }: UserProfileProps) {
             />
           </CardHeader>
           <Divider />
-          <CardBody>
+          <CardBody className="p-4">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    label="Nombre"
-                    labelPlacement="outside"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder="Nombre"
-                  />
-                </div>
-                <div>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    label="Apellido"
-                    labelPlacement="outside"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    placeholder="Apellido"
-                  />
-                </div>
+              <div className="flex flex-col gap-6">
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  label="Nombre"
+                  labelPlacement="outside"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="Nombre"
+                />
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  label="Apellido"
+                  labelPlacement="outside"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Apellido"
+                />
               </div>
 
-              <div className="text-sm text-gray-500">
-                <p>
+              <div className="flex flex-col gap-6">
+                {/* <p>
                   Tipo de cuenta:
                   <span className="ml-1 font-medium">
                     {user?.type === 'admin' && 'Administrador'}
@@ -178,18 +180,26 @@ export function UserProfile({ userId }: UserProfileProps) {
                     {user?.type === 'user' && 'Usuario'}
                     {!['admin', 'driver', 'user'].includes(user?.type || '') && 'Usuario'}
                   </span>
-                </p>
-                <p>
-                  Estado:
-                  <span className="ml-1 font-medium">
-                    {user?.status === 'confirmed' ? 'Confirmado' : 'Pendiente'}
-                  </span>
-                </p>
+                </p> */}
+                <Input
+                  id="type"
+                  name="type"
+                  label="Tipo de cuenta"
+                  labelPlacement="outside"
+                  value={userTypeMap[user?.type as keyof typeof userTypeMap]}
+                  disabled
+                  readOnly
+                />
+                <span className="flex items-center gap-2 text-sm">
+                  Confirmación:
+                  {user?.status === 'confirmed' && <CheckCircleIcon className="w-5 h-5 text-green-500" />}
+                  {user?.status === 'pending' && <ExclamationCircleIcon className="w-5 h-5 text-red-500" />}
+                </span>
               </div>
             </form>
           </CardBody>
           <Divider />
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-between p-4">
             <Button
               variant="faded"
               onClick={() => navigate('/dashboard')}
