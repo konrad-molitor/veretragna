@@ -7,11 +7,72 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { canActivate } from '../common/middlewares/auth.middleware';
+import { UserType } from './user.entity';
+import { ExpressRequest } from '../common/types/request';
 
 const userRouter = Router();
 
+// Get current user profile
+userRouter.get('/me', canActivate([UserType.USER]), async (req: ExpressRequest, res: Response) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    const user = await userService.getCurrentUser(req.user.id);
+
+    return res.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      status: user.status,
+      type: user.type,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return res.status(500).json({ error: error.message || 'Error al obtener el perfil del usuario' });
+  }
+});
+
+// Update current user profile
+userRouter.patch('/me', canActivate([UserType.USER]), async (req: ExpressRequest, res: Response) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    const updateUserDto = plainToClass(UpdateUserDto, req.body);
+    const errors = await validate(updateUserDto);
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    const user = await userService.updateUser(req.user.id, updateUserDto);
+
+    return res.json({
+      message: 'Perfil actualizado correctamente',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        status: user.status,
+        type: user.type,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return res.status(400).json({ error: error.message || 'Error al actualizar el perfil del usuario' });
+  }
+});
+
 // User creation (registration)
-userRouter.post('/', async (req: Request, res: Response) => {
+userRouter.post('/', async (req: ExpressRequest, res: Response) => {
   try {
     const createUserDto = plainToClass(CreateUserDto, req.body);
     const errors = await validate(createUserDto);
@@ -38,7 +99,7 @@ userRouter.post('/', async (req: Request, res: Response) => {
 });
 
 // Registration confirmation
-userRouter.get('/confirm', async (req: Request, res: Response) => {
+userRouter.get('/confirm', async (req: ExpressRequest, res: Response) => {
   try {
     const { code } = req.query;
 
@@ -68,7 +129,7 @@ userRouter.get('/confirm', async (req: Request, res: Response) => {
 });
 
 // Login
-userRouter.post('/login', async (req: Request, res: Response) => {
+userRouter.post('/login', async (req: ExpressRequest, res: Response) => {
   try {
     const loginUserDto = plainToClass(LoginUserDto, req.body);
     const errors = await validate(loginUserDto);
@@ -96,9 +157,15 @@ userRouter.post('/login', async (req: Request, res: Response) => {
 });
 
 // Update user data
-userRouter.patch('/:id', async (req: Request, res: Response) => {
+userRouter.patch('/:id', canActivate([UserType.USER]), async (req: ExpressRequest, res: Response) => {
   try {
     const { id } = req.params;
+
+    // Authorization check: users can only update their own data
+    if (req.user?.type !== UserType.ADMIN && req.user?.id !== id) {
+      return res.status(403).json({ error: 'No autorizado para actualizar este usuario' });
+    }
+
     const updateUserDto = plainToClass(UpdateUserDto, req.body);
     const errors = await validate(updateUserDto);
 
@@ -125,8 +192,8 @@ userRouter.patch('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Get all users
-userRouter.get('/', async (req: Request, res: Response) => {
+// Get all users (admin only)
+userRouter.get('/', canActivate([UserType.ADMIN]), async (req: ExpressRequest, res: Response) => {
   try {
     const users = await userService.getAllUsers();
     return res.json(users.map((user) => ({
@@ -145,10 +212,16 @@ userRouter.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get user by ID
-userRouter.get('/:id', async (req: Request, res: Response) => {
+// Get user by ID (admin and self access)
+userRouter.get('/:id', canActivate([UserType.USER]), async (req: ExpressRequest, res: Response) => {
   try {
     const { id } = req.params;
+
+    // Authorization check: users can only view their own data
+    if (req.user?.type !== UserType.ADMIN && req.user?.id !== id) {
+      return res.status(403).json({ error: 'No autorizado para ver este usuario' });
+    }
+
     const user = await userService.getUserById(id);
 
     return res.json({
@@ -168,7 +241,7 @@ userRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Forgot password request
-userRouter.post('/forgot-password', async (req: Request, res: Response) => {
+userRouter.post('/forgot-password', async (req: ExpressRequest, res: Response) => {
   try {
     const forgotPasswordDto = plainToClass(ForgotPasswordDto, req.body);
     const errors = await validate(forgotPasswordDto);
@@ -190,7 +263,7 @@ userRouter.post('/forgot-password', async (req: Request, res: Response) => {
 });
 
 // Reset password
-userRouter.post('/reset-password', async (req: Request, res: Response) => {
+userRouter.post('/reset-password', async (req: ExpressRequest, res: Response) => {
   try {
     const resetPasswordDto = plainToClass(ResetPasswordDto, req.body);
     const errors = await validate(resetPasswordDto);
