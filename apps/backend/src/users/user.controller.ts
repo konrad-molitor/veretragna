@@ -5,6 +5,8 @@ import { userService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 const userRouter = Router();
 
@@ -162,6 +164,53 @@ userRouter.get('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error getting user:', error);
     return res.status(404).json({ error: error.message || 'Usuario no encontrado' });
+  }
+});
+
+// Forgot password request
+userRouter.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const forgotPasswordDto = plainToClass(ForgotPasswordDto, req.body);
+    const errors = await validate(forgotPasswordDto);
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    await userService.initResetPassword(forgotPasswordDto);
+
+    // Always return success to avoid revealing user existence
+    return res.json({
+      message: 'Si existe una cuenta con ese correo electrónico, recibirás un enlace para restablecer tu contraseña.',
+    });
+  } catch (error) {
+    console.error('Error initiating password reset:', error);
+    return res.status(400).json({ error: error.message || 'Error al iniciar el restablecimiento de contraseña' });
+  }
+});
+
+// Reset password
+userRouter.post('/reset-password', async (req: Request, res: Response) => {
+  try {
+    const resetPasswordDto = plainToClass(ResetPasswordDto, req.body);
+    const errors = await validate(resetPasswordDto);
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    const user = await userService.resetPassword(resetPasswordDto);
+
+    return res.json({
+      message: 'Contraseña restablecida con éxito. Ya puedes iniciar sesión con tu nueva contraseña.',
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    return res.status(400).json({ error: error.message || 'Error al restablecer la contraseña' });
   }
 });
 
