@@ -1,11 +1,13 @@
- 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { User, UserStatus } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { mailerService } from '../mailer/mailer.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 class UserService {
   // Search for a user by ID with a check
@@ -30,6 +32,16 @@ class UserService {
     }
   }
 
+  // Utility method to generate secure random codes
+  private generateSecureCode(length = 6): string {
+    // Generate random bytes and convert to a hexadecimal string
+    const randomBytes = crypto.randomBytes(Math.ceil(length / 2));
+    const hexString = randomBytes.toString('hex').slice(0, length);
+    
+    // Convert to uppercase for better readability
+    return hexString.toUpperCase();
+  }
+
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const {
       email, firstName, lastName, password,
@@ -42,7 +54,7 @@ class UserService {
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Generate OTP code for email confirmation
-    const otpCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const otpCode = this.generateSecureCode();
 
     // Create new user
     const user = new User();
@@ -157,6 +169,50 @@ class UserService {
 
   async getUserById(id: string): Promise<User> {
     return this.findUserById(id);
+  }
+
+  async initResetPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
+    const { email } = forgotPasswordDto;
+    const user = await this.findUserByEmail(email);
+
+    if (!user) {
+      // Don't reveal if user exists or not for security reasons
+      return;
+    }
+
+    if (user.status !== UserStatus.CONFIRMED) {
+      throw new Error('Usuario no confirmado');
+    }
+
+    // Generate reset code
+    const passwordResetCode = this.generateSecureCode();
+
+    // Update user record
+    user.passwordResetCode = passwordResetCode;
+    await user.save();
+
+    // Send reset email using mailer service
+    await mailerService.sendPasswordResetEmail(email, passwordResetCode);
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<User> {
+    const { passwordResetCode, newPassword } = resetPasswordDto;
+
+    const user = await User.findOneBy({ passwordResetCode });
+
+    if (!user) {
+      throw new Error('Código de restablecimiento inválido o expirado');
+    }
+
+    // Hash the new password
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    
+    // Clear reset code
+    user.passwordResetCode = null;
+
+    await user.save();
+
+    return user;
   }
 }
 

@@ -11,6 +11,7 @@ import HealthCheck from '../components/HealthCheck';
 import LandingContent from '../components/LandingContent';
 import AuthForm from '../components/AuthForm';
 import EmailConfirmation from '../components/EmailConfirmation';
+import ResetPassword from '../components/ResetPassword';
 
 export function App() {
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -28,6 +29,10 @@ export function App() {
       <Route
         path="/confirm"
         element={<EmailConfirmation />}
+      />
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
       />
       <Route
         path="/"

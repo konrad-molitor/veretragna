@@ -36,6 +36,9 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
     otpCode: string | null;
 
+  @Column({ nullable: true })
+    passwordResetCode: string | null;
+
   @Column({
     type: 'enum',
     enum: UserStatus,

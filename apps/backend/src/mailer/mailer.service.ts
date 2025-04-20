@@ -56,13 +56,14 @@ class MailerService {
   /**
    * Sends a password reset email
    */
-  async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
+  async sendPasswordResetEmail(email: string, resetCode: string): Promise<void> {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-    const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+    const resetLink = `${frontendUrl}/reset-password?code=${resetCode}`;
 
     const subject = 'Solicitud de Restablecimiento de Contraseña';
     const html = await this.renderPasswordResetEmail({
       resetLink,
+      resetCode,
       subject,
     });
 
@@ -98,12 +99,14 @@ class MailerService {
    */
   private async renderPasswordResetEmail(data: {
     resetLink: string;
+    resetCode: string;
     subject: string;
   }): Promise<string> {
     try {
       // Render the password reset email content
       const content = await this.eta.renderString(passwordResetTemplate, {
         resetLink: data.resetLink,
+        resetCode: data.resetCode,
       });
 
       // Render the content inside the layout
