@@ -2,9 +2,9 @@ import { Entity, Column } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 
 export enum BusType {
-  MINI = 'mini',
-  TOURIST = 'tourist',
-  STANDARD = 'standard',
+  MICROBUS = 'microbus',
+  OMNIBUS = 'omnibus',
+  MINIBUS = 'minibus',
 }
 
 @Entity('buses')
@@ -18,10 +18,10 @@ export class Bus extends BaseEntity {
   @Column({
     type: 'enum',
     enum: BusType,
-    default: BusType.STANDARD,
+    default: BusType.MINIBUS,
   })
     type: BusType;
 
   @Column('json')
     totalSeats: Record<string, number>;
-} 
+}

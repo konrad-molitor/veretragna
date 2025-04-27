@@ -43,4 +43,4 @@ class BusService {
   }
 }
 
-export const busService = new BusService(); 
+export const busService = new BusService();

@@ -92,4 +92,4 @@ busRouter.delete('/:id', canActivate([UserType.ADMIN]), async (req: ExpressReque
   }
 });
 
-export { busRouter }; 
+export { busRouter };

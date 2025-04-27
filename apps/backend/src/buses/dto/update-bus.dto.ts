@@ -26,4 +26,4 @@ export class UpdateBusDto {
   @IsNotEmpty()
   @IsOptional()
     totalSeats?: Record<string, number>;
-} 
+}

@@ -31,8 +31,11 @@ interface Bus {
   id: string;
   licensePlate: string;
   model: string;
-  type: 'mini' | 'tourist' | 'standard';
-  totalSeats: Record<string, number>;
+  type: 'microbus' | 'omnibus' | 'minibus';
+  totalSeats: {
+    regular?: number;
+    comfort?: number;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -40,7 +43,7 @@ interface Bus {
 interface BusFormData {
   licensePlate: string;
   model: string;
-  type: 'mini' | 'tourist' | 'standard';
+  type: 'microbus' | 'omnibus' | 'minibus';
   totalSeats: {
     regular?: number;
     comfort?: number;
@@ -50,7 +53,7 @@ interface BusFormData {
 const defaultBusFormData: BusFormData = {
   licensePlate: '',
   model: '',
-  type: 'standard',
+  type: 'minibus',
   totalSeats: {
     regular: 36,
     comfort: 4,
@@ -70,7 +73,7 @@ export function BusesPanel() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['mini', 'tourist', 'standard']));
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['microbus', 'omnibus', 'minibus']));
 
   const fetchBuses = async () => {
     try {
@@ -79,7 +82,6 @@ export function BusesPanel() {
       setBuses(response.data);
       setError(null);
     } catch (err) {
-       
       console.error('Error fetching buses:', err);
       setError('Error al cargar la lista de omnibus');
     } finally {
@@ -108,9 +110,9 @@ export function BusesPanel() {
 
   const formatBusType = (type: string): string => {
     const types = {
-      mini: 'Mini',
-      tourist: 'Turístico',
-      standard: 'Estándar',
+      microbus: 'Microbus',
+      omnibus: 'Ómnibus',
+      minibus: 'Minibus',
     };
     return types[type as keyof typeof types] || type;
   };
@@ -191,21 +193,18 @@ export function BusesPanel() {
 
       setIsModalOpen(false);
     } catch (err) {
-       
       console.error('Error saving bus:', err);
       // Here you might want to show an error message to the user
     }
   };
 
   const handleDeleteBus = async (id: string) => {
-     
-    if (window.confirm('¿Está seguro que desea eliminar este omnibus?')) {
+    if (window.confirm('¿Está seguro que desea eliminar este vehículo?')) {
       try {
         await axiosInstance.delete(`/buses/${id}`);
         // Refresh buses list
         await fetchBuses();
       } catch (err) {
-         
         console.error('Error deleting bus:', err);
         // Show error message
       }
@@ -275,14 +274,14 @@ export function BusesPanel() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Gestión de Omnibus</h2>
+        <h2 className="text-2xl font-bold">Gestión de Vehículos</h2>
         <Button
           className="bg-blue-600 hover:bg-blue-700 text-white"
           startContent={<PlusIcon className="h-4 w-4" />}
           onClick={handleAddBus}
           type="button"
         >
-          Añadir Nuevo Omnibus
+          Añadir Nuevo Vehículo
         </Button>
       </div>
 
@@ -333,14 +332,14 @@ export function BusesPanel() {
 
           {/* Bus type filter */}
           <div className="mb-6">
-            <div className="text-sm font-medium mb-2">Tipo de omnibus</div>
+            <div className="text-sm font-medium mb-2">Tipo de vehículo</div>
             <CheckboxGroup
               value={Array.from(selectedTypes)}
               onValueChange={handleTypeFilterChange}
             >
-              <Checkbox value="mini">Mini</Checkbox>
-              <Checkbox value="tourist">Turístico</Checkbox>
-              <Checkbox value="standard">Estándar</Checkbox>
+              <Checkbox value="microbus">Microbus</Checkbox>
+              <Checkbox value="omnibus">Ómnibus</Checkbox>
+              <Checkbox value="minibus">Minibus</Checkbox>
             </CheckboxGroup>
           </div>
         </div>
@@ -372,9 +371,9 @@ export function BusesPanel() {
                 onChange={(e) => handleInputChange('type', e.target.value)}
                 required
               >
-                <SelectItem key="mini">Mini</SelectItem>
-                <SelectItem key="tourist">Turístico</SelectItem>
-                <SelectItem key="standard">Estándar</SelectItem>
+                <SelectItem key="microbus">Microbus</SelectItem>
+                <SelectItem key="omnibus">Ómnibus</SelectItem>
+                <SelectItem key="minibus">Minibus</SelectItem>
               </Select>
               <div>
                 <p className="text-sm mb-2">Número de asientos</p>

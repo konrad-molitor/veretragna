@@ -22,4 +22,4 @@ export class CreateBusDto {
   @IsObject()
   @IsNotEmpty()
     totalSeats: Record<string, number>;
-} 
+}
