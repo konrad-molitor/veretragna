@@ -10,6 +10,7 @@ export function Sidebar({ activeItem, onItemClick }: SidebarProps) {
   const navItems = [
     { id: 'users', label: 'Usuarios' },
     { id: 'locations', label: 'Ubicaciones' },
+    { id: 'buses', label: 'Omnibus' },
   ];
 
   return (

@@ -11,6 +11,7 @@ import dataSource from './config/database.config';
 import apiVersionRouter from './api-version/api-version.controller';
 import userRouter from './users/user.controller';
 import { locationRouter } from './locations/location.controller';
+import { busRouter } from './buses/bus.controller';
 import { authenticate } from './common/middlewares/auth.middleware';
 import { locationService } from './locations/locations.service';
 
@@ -46,6 +47,7 @@ const initializeApp = async () => {
     app.use('/api/versions', apiVersionRouter);
     app.use('/api/users', userRouter);
     app.use('/api/locations', locationRouter);
+    app.use('/api/buses', busRouter);
 
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
 

@@ -4,6 +4,7 @@ import {
   AdminPanelContent,
   UsersPanel,
   LocationsPanel,
+  BusesPanel,
 } from './components';
 
 // Main admin dashboard component that manages panel navigation
@@ -17,6 +18,8 @@ export function AdminDashboard() {
         return <UsersPanel />;
       case 'locations':
         return <LocationsPanel />;
+      case 'buses':
+        return <BusesPanel />;
       default:
         return <UsersPanel />;
     }
