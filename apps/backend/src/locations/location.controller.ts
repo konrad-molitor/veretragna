@@ -41,6 +41,7 @@ locationRouter.post('/', canActivate([UserType.ADMIN]), async (req: ExpressReque
 
     if (errors.length > 0) {
       res.status(400).json({ errors });
+      return;
     }
 
     const location = await locationService.createLocation(createLocationDto);
@@ -63,6 +64,7 @@ locationRouter.patch('/:id', canActivate([UserType.ADMIN]), async (req: ExpressR
 
     if (errors.length > 0) {
       res.status(400).json({ errors });
+      return;
     }
 
     const location = await locationService.updateLocation(id, updateLocationDto);
