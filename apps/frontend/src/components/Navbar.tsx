@@ -88,8 +88,8 @@ export default function Navbar({ user }: NavbarProps) {
                 />
               </DropdownTrigger>
               <DropdownMenu aria-label="Acciones de usuario">
-                <DropdownItem 
-                  key="profile" 
+                <DropdownItem
+                  key="profile"
                   startContent={<UserCircleIcon className="h-5 w-5" />}
                   onClick={() => navigate('/dashboard/me')}
                 >

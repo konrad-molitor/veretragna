@@ -47,6 +47,7 @@ export default [
       'import/no-extraneous-dependencies': ["error", { "devDependencies": true }],
       "no-console": "warn",
       "import/prefer-default-export": "off",
+      "class-methods-use-this": "off",
     },
     settings: {
         'import/resolver': {

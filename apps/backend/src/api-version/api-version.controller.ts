@@ -7,10 +7,10 @@ const apiVersionRouter = Router();
 apiVersionRouter.get('/', async (req: Request, res: Response) => {
   try {
     const versions = await ApiVersion.find();
-    return res.json(versions);
+    res.json(versions);
   } catch (error) {
     console.error('Error fetching API versions:', error);
-    return res.status(500).json({ error: 'Failed to fetch API versions' });
+    res.status(500).json({ error: 'Failed to fetch API versions' });
   }
 });
 
@@ -19,12 +19,12 @@ apiVersionRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     const version = await ApiVersion.findOneBy({ id: req.params.id });
     if (!version) {
-      return res.status(404).json({ error: 'API version not found' });
+      res.status(404).json({ error: 'API version not found' });
     }
-    return res.json(version);
+    res.json(version);
   } catch (error) {
     console.error('Error fetching API version:', error);
-    return res.status(500).json({ error: 'Failed to fetch API version' });
+    res.status(500).json({ error: 'Failed to fetch API version' });
   }
 });
 
@@ -37,10 +37,10 @@ apiVersionRouter.post('/', async (req: Request, res: Response) => {
     apiVersion.description = description;
 
     await apiVersion.save();
-    return res.status(201).json(apiVersion);
+    res.status(201).json(apiVersion);
   } catch (error) {
     console.error('Error creating API version:', error);
-    return res.status(500).json({ error: 'Failed to create API version' });
+    res.status(500).json({ error: 'Failed to create API version' });
   }
 });
 
