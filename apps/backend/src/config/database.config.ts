@@ -2,6 +2,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { ApiVersion } from '../api-version/api-version.entity';
 import { User } from '../users/user.entity';
+import { Location } from '../locations/location.entity';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -13,7 +14,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'veretragna',
-  entities: [ApiVersion, User],
+  entities: [ApiVersion, User, Location],
   synchronize: true, // Should be false in production
   logging: process.env.NODE_ENV !== 'production',
 };

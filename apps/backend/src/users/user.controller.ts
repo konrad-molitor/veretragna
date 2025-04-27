@@ -17,12 +17,13 @@ const userRouter = Router();
 userRouter.get('/me', canActivate([UserType.USER]), async (req: ExpressRequest, res: Response) => {
   try {
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: 'No autenticado' });
+      res.status(401).json({ error: 'No autenticado' });
+      return;
     }
 
     const user = await userService.getCurrentUser(req.user.id);
 
-    return res.json({
+    res.json({
       id: user.id,
       email: user.email,
       firstName: user.firstName,
@@ -34,7 +35,7 @@ userRouter.get('/me', canActivate([UserType.USER]), async (req: ExpressRequest, 
     });
   } catch (error) {
     console.error('Error getting current user:', error);
-    return res.status(500).json({ error: error.message || 'Error al obtener el perfil del usuario' });
+    res.status(500).json({ error: error.message || 'Error al obtener el perfil del usuario' });
   }
 });
 
@@ -42,19 +43,21 @@ userRouter.get('/me', canActivate([UserType.USER]), async (req: ExpressRequest, 
 userRouter.patch('/me', canActivate([UserType.USER]), async (req: ExpressRequest, res: Response) => {
   try {
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: 'No autenticado' });
+      res.status(401).json({ error: 'No autenticado' });
+      return;
     }
 
     const updateUserDto = plainToClass(UpdateUserDto, req.body);
     const errors = await validate(updateUserDto);
 
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      res.status(400).json({ errors });
+      return;
     }
 
     const user = await userService.updateUser(req.user.id, updateUserDto);
 
-    return res.json({
+    res.json({
       message: 'Perfil actualizado correctamente',
       user: {
         id: user.id,
@@ -67,7 +70,7 @@ userRouter.patch('/me', canActivate([UserType.USER]), async (req: ExpressRequest
     });
   } catch (error) {
     console.error('Error updating user profile:', error);
-    return res.status(400).json({ error: error.message || 'Error al actualizar el perfil del usuario' });
+    res.status(400).json({ error: error.message || 'Error al actualizar el perfil del usuario' });
   }
 });
 
@@ -78,11 +81,12 @@ userRouter.post('/', async (req: ExpressRequest, res: Response) => {
     const errors = await validate(createUserDto);
 
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      res.status(400).json({ errors });
+      return;
     }
 
     const user = await userService.createUser(createUserDto);
-    return res.status(201).json({
+    res.status(201).json({
       message: 'User created successfully. Please check your email for confirmation.',
       user: {
         id: user.id,
@@ -94,7 +98,7 @@ userRouter.post('/', async (req: ExpressRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error creating user:', error);
-    return res.status(400).json({ error: error.message || 'Error al crear el usuario' });
+    res.status(400).json({ error: error.message || 'Error al crear el usuario' });
   }
 });
 
@@ -104,14 +108,15 @@ userRouter.get('/confirm', async (req: ExpressRequest, res: Response) => {
     const { code } = req.query;
 
     if (!code || typeof code !== 'string') {
-      return res.status(400).json({ error: 'El código de confirmación está faltando' });
+      res.status(400).json({ error: 'El código de confirmación está faltando' });
+      return;
     }
 
     // Confirm user and get token
     const { user, token } = await userService.confirmUserAndLogin(code);
 
     // Return user data and token instead of redirecting
-    return res.json({
+    res.json({
       message: 'Registro confirmado correctamente. Ya puedes iniciar sesión.',
       user: {
         id: user.id,
@@ -124,7 +129,7 @@ userRouter.get('/confirm', async (req: ExpressRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error confirming registration:', error);
-    return res.status(400).json({ error: error.message || 'Error al confirmar el registro' });
+    res.status(400).json({ error: error.message || 'Error al confirmar el registro' });
   }
 });
 
@@ -135,12 +140,13 @@ userRouter.post('/login', async (req: ExpressRequest, res: Response) => {
     const errors = await validate(loginUserDto);
 
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      res.status(400).json({ errors });
+      return;
     }
 
     const { user, token } = await userService.loginUser(loginUserDto);
 
-    return res.json({
+    res.json({
       user: {
         id: user.id,
         email: user.email,
@@ -152,7 +158,7 @@ userRouter.post('/login', async (req: ExpressRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error during login:', error);
-    return res.status(401).json({ error: error.message || 'Error al iniciar sesión' });
+    res.status(401).json({ error: error.message || 'Error al iniciar sesión' });
   }
 });
 
@@ -163,19 +169,21 @@ userRouter.patch('/:id', canActivate([UserType.USER]), async (req: ExpressReques
 
     // Authorization check: users can only update their own data
     if (req.user?.type !== UserType.ADMIN && req.user?.id !== id) {
-      return res.status(403).json({ error: 'No autorizado para actualizar este usuario' });
+      res.status(403).json({ error: 'No autorizado para actualizar este usuario' });
+      return;
     }
 
     const updateUserDto = plainToClass(UpdateUserDto, req.body);
     const errors = await validate(updateUserDto);
 
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      res.status(400).json({ errors });
+      return;
     }
 
     const user = await userService.updateUser(id, updateUserDto);
 
-    return res.json({
+    res.json({
       message: 'User data updated',
       user: {
         id: user.id,
@@ -188,7 +196,7 @@ userRouter.patch('/:id', canActivate([UserType.USER]), async (req: ExpressReques
     });
   } catch (error) {
     console.error('Error updating user:', error);
-    return res.status(400).json({ error: error.message || 'Error al actualizar los datos del usuario' });
+    res.status(400).json({ error: error.message || 'Error al actualizar los datos del usuario' });
   }
 });
 
@@ -196,7 +204,7 @@ userRouter.patch('/:id', canActivate([UserType.USER]), async (req: ExpressReques
 userRouter.get('/', canActivate([UserType.ADMIN]), async (req: ExpressRequest, res: Response) => {
   try {
     const users = await userService.getAllUsers();
-    return res.json(users.map((user) => ({
+    res.json(users.map((user) => ({
       id: user.id,
       email: user.email,
       firstName: user.firstName,
@@ -208,7 +216,7 @@ userRouter.get('/', canActivate([UserType.ADMIN]), async (req: ExpressRequest, r
     })));
   } catch (error) {
     console.error('Error getting users:', error);
-    return res.status(500).json({ error: 'Error al obtener la lista de usuarios' });
+    res.status(500).json({ error: 'Error al obtener la lista de usuarios' });
   }
 });
 
@@ -219,12 +227,13 @@ userRouter.get('/:id', canActivate([UserType.USER]), async (req: ExpressRequest,
 
     // Authorization check: users can only view their own data
     if (req.user?.type !== UserType.ADMIN && req.user?.id !== id) {
-      return res.status(403).json({ error: 'No autorizado para ver este usuario' });
+      res.status(403).json({ error: 'No autorizado para ver este usuario' });
+      return;
     }
 
     const user = await userService.getUserById(id);
 
-    return res.json({
+    res.json({
       id: user.id,
       email: user.email,
       firstName: user.firstName,
@@ -236,7 +245,7 @@ userRouter.get('/:id', canActivate([UserType.USER]), async (req: ExpressRequest,
     });
   } catch (error) {
     console.error('Error getting user:', error);
-    return res.status(404).json({ error: error.message || 'Usuario no encontrado' });
+    res.status(404).json({ error: error.message || 'Usuario no encontrado' });
   }
 });
 
@@ -247,18 +256,19 @@ userRouter.post('/forgot-password', async (req: ExpressRequest, res: Response) =
     const errors = await validate(forgotPasswordDto);
 
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      res.status(400).json({ errors });
+      return;
     }
 
     await userService.initResetPassword(forgotPasswordDto);
 
     // Always return success to avoid revealing user existence
-    return res.json({
+    res.json({
       message: 'Si existe una cuenta con ese correo electrónico, recibirás un enlace para restablecer tu contraseña.',
     });
   } catch (error) {
     console.error('Error initiating password reset:', error);
-    return res.status(400).json({ error: error.message || 'Error al iniciar el restablecimiento de contraseña' });
+    res.status(400).json({ error: error.message || 'Error al iniciar el restablecimiento de contraseña' });
   }
 });
 
@@ -269,12 +279,13 @@ userRouter.post('/reset-password', async (req: ExpressRequest, res: Response) =>
     const errors = await validate(resetPasswordDto);
 
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      res.status(400).json({ errors });
+      return;
     }
 
     const user = await userService.resetPassword(resetPasswordDto);
 
-    return res.json({
+    res.json({
       message: 'Contraseña restablecida con éxito. Ya puedes iniciar sesión con tu nueva contraseña.',
       user: {
         id: user.id,
@@ -283,7 +294,7 @@ userRouter.post('/reset-password', async (req: ExpressRequest, res: Response) =>
     });
   } catch (error) {
     console.error('Error resetting password:', error);
-    return res.status(400).json({ error: error.message || 'Error al restablecer la contraseña' });
+    res.status(400).json({ error: error.message || 'Error al restablecer la contraseña' });
   }
 });
 
