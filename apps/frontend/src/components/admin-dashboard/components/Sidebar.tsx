@@ -11,6 +11,7 @@ export function Sidebar({ activeItem, onItemClick }: SidebarProps) {
     { id: 'users', label: 'Usuarios' },
     { id: 'locations', label: 'Ubicaciones' },
     { id: 'buses', label: 'Vehículos' },
+    { id: 'routes', label: 'Rutas' },
   ];
 
   return (
