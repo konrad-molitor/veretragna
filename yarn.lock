@@ -12,6 +12,11 @@ __metadata:
     "@babel/core": "npm:^7.14.5"
     "@babel/preset-react": "npm:^7.14.5"
     "@eslint/js": "npm:^9.8.0"
+    "@fullcalendar/core": "npm:^6.1.17"
+    "@fullcalendar/daygrid": "npm:^6.1.17"
+    "@fullcalendar/interaction": "npm:^6.1.17"
+    "@fullcalendar/react": "npm:^6.1.17"
+    "@fullcalendar/timegrid": "npm:^6.1.17"
     "@heroicons/react": "npm:^2.2.0"
     "@heroui/react": "npm:^2.7.5"
     "@nestjs/jwt": "npm:^11.0.0"
@@ -1910,6 +1915,55 @@ __metadata:
   dependencies:
     tslib: "npm:^2.8.0"
   checksum: 10c0/bacbedd508519c1bb5ca2620e89dc38f12101be59439aa14aa472b222915b462cb7d679726640f6dcf52a05dd218b5aa27ccd60f2e5010bb96f1d4929848cde0
+  languageName: node
+  linkType: hard
+
+"@fullcalendar/core@npm:^6.1.17":
+  version: 6.1.17
+  resolution: "@fullcalendar/core@npm:6.1.17"
+  dependencies:
+    preact: "npm:~10.12.1"
+  checksum: 10c0/211f5863eaadc8694c9d76084b2e0b65aade73ec8aa51c77f514060541406ed742070217ef66518c1f6065ea7ac2b5ef6e8c3e64dc9b421bb27388b90c0873b7
+  languageName: node
+  linkType: hard
+
+"@fullcalendar/daygrid@npm:^6.1.17, @fullcalendar/daygrid@npm:~6.1.17":
+  version: 6.1.17
+  resolution: "@fullcalendar/daygrid@npm:6.1.17"
+  peerDependencies:
+    "@fullcalendar/core": ~6.1.17
+  checksum: 10c0/ae924c0fba749ba0ca33ea06a8d51f117366d7b34411ea6fde7037b5ef98e7e709ac5805d55d2f675b9fefc8eb39e5e566b2a910f965dde7cfcad1b676ea162c
+  languageName: node
+  linkType: hard
+
+"@fullcalendar/interaction@npm:^6.1.17":
+  version: 6.1.17
+  resolution: "@fullcalendar/interaction@npm:6.1.17"
+  peerDependencies:
+    "@fullcalendar/core": ~6.1.17
+  checksum: 10c0/986f664890c4ee0a6008b7b9ce78880dbe3ef3754cae96736afa7c6df3f4263837f58c5c832408652d4b36e69ca785689e84e3f5e1f37d595221244341b98f55
+  languageName: node
+  linkType: hard
+
+"@fullcalendar/react@npm:^6.1.17":
+  version: 6.1.17
+  resolution: "@fullcalendar/react@npm:6.1.17"
+  peerDependencies:
+    "@fullcalendar/core": ~6.1.17
+    react: ^16.7.0 || ^17 || ^18 || ^19
+    react-dom: ^16.7.0 || ^17 || ^18 || ^19
+  checksum: 10c0/4dd70f9d978b53bff2652e53e9a97d958087004a2f0069f050a6b46acce263135243b57fd59335c9f3ddd57acb16d0ecafddf96e53f1885c46127316df5dc66c
+  languageName: node
+  linkType: hard
+
+"@fullcalendar/timegrid@npm:^6.1.17":
+  version: 6.1.17
+  resolution: "@fullcalendar/timegrid@npm:6.1.17"
+  dependencies:
+    "@fullcalendar/daygrid": "npm:~6.1.17"
+  peerDependencies:
+    "@fullcalendar/core": ~6.1.17
+  checksum: 10c0/ebd2ca0da0b0b98ddb336ee6a2a661e15918d4aebabec31c6c460587d085a9a0095604ef2ee08e0dc5eaf4dbc9a2cc9ae2c3f6802a0a5fcc319808e9a8cf6c98
   languageName: node
   linkType: hard
 
@@ -17058,6 +17112,13 @@ __metadata:
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
   checksum: 10c0/b75510d7b28c3ab728c8733dd01538314a18c52af426f199a3c9177e63eb08602a3938bfb66b62dc01350b9aed62087eabbf229af97a1659eb8d3513cec823b3
+  languageName: node
+  linkType: hard
+
+"preact@npm:~10.12.1":
+  version: 10.12.1
+  resolution: "preact@npm:10.12.1"
+  checksum: 10c0/c77a55e897dcf298b7aa13637fed29744d3cf6c083f2832856e8551dbf27303c8b6946569736de16b05cba15c0e44ad404beb236ad9e36583a6fc5e2efad7777
   languageName: node
   linkType: hard
 

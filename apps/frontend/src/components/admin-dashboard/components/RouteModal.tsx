@@ -103,7 +103,7 @@ function DraggableStop({
       if (draggedItem.index !== index) {
         moveStop(draggedItem.index, index);
         // This is required by the DnD library
-         
+
         draggedItem.index = index;
       }
     },

@@ -1,10 +1,10 @@
+import { In } from 'typeorm';
 import { Route } from './route.entity';
 import { RouteStop } from './route-stop.entity';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { CreateRouteStopDto } from './dto/create-route-stop.dto';
 import { Location } from '../locations/location.entity';
-import { In } from 'typeorm';
 
 class RoutesService {
   // Get all routes

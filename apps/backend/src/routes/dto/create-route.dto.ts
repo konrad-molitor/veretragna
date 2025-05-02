@@ -33,4 +33,4 @@ export class CreateRouteDto {
   @Type(() => CreateRouteStopDto)
   @IsOptional()
     stops?: CreateRouteStopDto[];
-} 
+}

@@ -13,6 +13,7 @@ import userRouter from './users/user.controller';
 import { locationRouter } from './locations/location.controller';
 import { busRouter } from './buses/bus.controller';
 import { routesRouter } from './routes/routes.controller';
+import { scheduleRouter } from './schedules/schedule.controller';
 import { authenticate } from './common/middlewares/auth.middleware';
 import { locationService } from './locations/locations.service';
 
@@ -50,6 +51,7 @@ const initializeApp = async () => {
     app.use('/api/locations', locationRouter);
     app.use('/api/buses', busRouter);
     app.use('/api/routes', routesRouter);
+    app.use('/api/schedules', scheduleRouter);
 
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
