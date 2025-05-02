@@ -130,4 +130,4 @@ routesRouter.delete('/:routeId/stops/:stopId', canActivate([UserType.ADMIN]), as
   }
 });
 
-export { routesRouter }; 
+export { routesRouter };

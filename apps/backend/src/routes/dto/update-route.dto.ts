@@ -22,4 +22,4 @@ export class UpdateRouteDto {
   @IsEnum(RouteType)
   @IsOptional()
     type?: RouteType;
-} 
+}

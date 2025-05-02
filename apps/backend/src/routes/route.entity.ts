@@ -22,10 +22,10 @@ export class Route extends BaseEntity {
   @Column({
     type: 'enum',
     enum: RouteType,
-    default: RouteType.REGULAR
+    default: RouteType.REGULAR,
   })
     type: RouteType;
 
-  @OneToMany(() => RouteStop, routeStop => routeStop.route, { cascade: true })
+  @OneToMany(() => RouteStop, (routeStop) => routeStop.route, { cascade: true })
     stops: RouteStop[];
-} 
+}

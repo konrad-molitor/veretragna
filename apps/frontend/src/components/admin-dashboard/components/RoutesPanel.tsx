@@ -299,7 +299,7 @@ export function RoutesPanel() {
         const sortedStops = route.stops.sort((a, b) => a.sequenceOrder - b.sequenceOrder);
         const firstStop = sortedStops[0];
         const lastStop = sortedStops[sortedStops.length - 1];
-        
+
         return (
           <div className="flex flex-col space-y-1">
             {sortedStops.length > 2 ? (
@@ -396,7 +396,7 @@ export function RoutesPanel() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Gestión de Rutas</h2>
         <Button
-          className='bg-blue-600 hover:bg-blue-700 text-white'
+          className="bg-blue-600 hover:bg-blue-700 text-white"
           startContent={<PlusIcon className="h-4 w-4" />}
           onClick={handleAddRoute}
           type="button"
@@ -413,7 +413,7 @@ export function RoutesPanel() {
             removeWrapper
             isStriped
             classNames={{
-              wrapper: "max-w-full",
+              wrapper: 'max-w-full',
             }}
           >
             <TableHeader>

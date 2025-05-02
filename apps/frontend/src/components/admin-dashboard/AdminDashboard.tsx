@@ -6,6 +6,7 @@ import {
   LocationsPanel,
   BusesPanel,
   RoutesPanel,
+  SchedulesPanel,
 } from './components';
 
 // Main admin dashboard component that manages panel navigation
@@ -23,6 +24,8 @@ export function AdminDashboard() {
         return <BusesPanel />;
       case 'routes':
         return <RoutesPanel />;
+      case 'schedules':
+        return <SchedulesPanel />;
       default:
         return <UsersPanel />;
     }

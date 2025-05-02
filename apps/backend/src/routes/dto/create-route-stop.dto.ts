@@ -20,4 +20,4 @@ export class CreateRouteStopDto {
   @IsNumber()
   @Min(0)
     stopDurationMinutes: number;
-} 
+}
