@@ -22,6 +22,8 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import axiosInstance from '../../../app/utils/axiosInstance';
+import safeParseFloat from '../../../app/utils/safeParseFloat';
+import formatPrice from '../../../app/utils/formatPrice';
 import RouteModal from './RouteModal';
 
 // Defining interfaces for routes and stops
@@ -182,17 +184,6 @@ export function RoutesPanel() {
     setSelectedLocationIds(new Set(locationIds));
   };
 
-  // Safe parse float function
-  const safeParseFloat = (value: unknown): number => {
-    if (typeof value === 'number') return value;
-    if (typeof value === 'string') {
-      const sanitizedValue = value.replace(',', '.');
-      const parsed = parseFloat(sanitizedValue);
-      return !Number.isNaN(parsed) ? parsed : 0;
-    }
-    return 0;
-  };
-
   // Route edit handler
   const handleEditRoute = (id: string) => {
     const routeToEdit = routes.find((route) => route.id === id);
@@ -331,18 +322,6 @@ export function RoutesPanel() {
         const sortedStops = route.stops.sort((a, b) => a.sequenceOrder - b.sequenceOrder);
         const firstStop = sortedStops[0];
         const lastStop = sortedStops[sortedStops.length - 1];
-
-        // Format price safely
-        const formatPrice = (price: unknown): string => {
-          if (typeof price === 'number') {
-            return price.toFixed(2);
-          }
-          if (typeof price === 'string') {
-            const parsed = parseFloat(price);
-            return !Number.isNaN(parsed) ? parsed.toFixed(2) : '0.00';
-          }
-          return '0.00';
-        };
 
         // Calculate total price for the route
         // include boarding price and all stop prices except first stop

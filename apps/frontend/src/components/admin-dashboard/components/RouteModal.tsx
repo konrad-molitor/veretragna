@@ -25,6 +25,8 @@ import {
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import axiosInstance from '../../../app/utils/axiosInstance';
+import safeParseFloat from '../../../app/utils/safeParseFloat';
+import formatPrice from '../../../app/utils/formatPrice';
 
 interface Location {
   id: string;
@@ -120,19 +122,6 @@ function DraggableStop({
 
   // Check if this is the first stop
   const isFirstStop = stop.sequenceOrder === 1;
-
-  // Format price safely
-  const formatPrice = (price: unknown): string => {
-    if (typeof price === 'number') {
-      return price.toFixed(2);
-    }
-    if (typeof price === 'string') {
-      const sanitizedValue = price.replace(',', '.');
-      const parsed = parseFloat(sanitizedValue);
-      return !Number.isNaN(parsed) ? parsed.toFixed(2) : '0.00';
-    }
-    return '0.00';
-  };
 
   // Tooltip text with time and price information
   const timeInfo = `Tiempo de llegada: ${stop.timeOffsetMinutesArrival} min desde inicio
@@ -254,13 +243,6 @@ function StopFormModal({
 
   // Determine if this is the first stop (sequenceOrder = 1)
   const isFirstStop = formData.sequenceOrder === 1;
-
-  // Safe number conversion
-  const safeParseFloat = (value: string): number => {
-    const sanitizedValue = value.replace(',', '.');
-    const parsed = parseFloat(sanitizedValue);
-    return !Number.isNaN(parsed) ? parsed : 0;
-  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -568,15 +550,6 @@ export function RouteModal({
   initialData,
   isEditing,
 }: RouteModalProps) {
-  const safeParseFloat = (value: string | number): number => {
-    if (typeof value === 'number') {
-      return value;
-    }
-    const sanitizedValue = value.replace(',', '.');
-    const parsed = parseFloat(sanitizedValue);
-    return !Number.isNaN(parsed) ? parsed : 0;
-  };
-
   const [formData, setFormData] = useState<RouteFormData>({
     name: '',
     description: '',
@@ -629,7 +602,7 @@ export function RouteModal({
       0,
     );
     const totalPrice = boardingPrice + segmentsPrice;
-    return totalPrice.toFixed(2);
+    return formatPrice(totalPrice);
   };
 
   // Handle form submission
