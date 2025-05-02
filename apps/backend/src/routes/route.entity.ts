@@ -26,6 +26,9 @@ export class Route extends BaseEntity {
   })
     type: RouteType;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    boardingPrice: number;
+
   @OneToMany(() => RouteStop, (routeStop) => routeStop.route, { cascade: true })
     stops: RouteStop[];
 }

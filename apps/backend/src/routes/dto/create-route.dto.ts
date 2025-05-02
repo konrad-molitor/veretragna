@@ -6,8 +6,10 @@ import {
   ValidateNested,
   IsArray,
   ArrayMinSize,
+  IsNumber,
+  Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { RouteType } from '../route.entity';
 import { CreateRouteStopDto } from './create-route-stop.dto';
 
@@ -26,6 +28,12 @@ export class CreateRouteDto {
   @IsEnum(RouteType)
   @IsOptional()
     type?: RouteType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? parseFloat(value) : value))
+    boardingPrice?: number;
 
   @IsArray()
   @ValidateNested({ each: true })

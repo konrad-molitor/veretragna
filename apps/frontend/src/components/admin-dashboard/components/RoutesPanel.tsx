@@ -22,6 +22,8 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import axiosInstance from '../../../app/utils/axiosInstance';
+import safeParseFloat from '../../../app/utils/safeParseFloat';
+import formatPrice from '../../../app/utils/formatPrice';
 import RouteModal from './RouteModal';
 
 // Defining interfaces for routes and stops
@@ -36,6 +38,7 @@ interface RouteStop {
   sequenceOrder: number;
   timeOffsetMinutesArrival: number;
   stopDurationMinutes: number;
+  price: number;
 }
 
 // Route type
@@ -51,6 +54,7 @@ interface Route {
   description: string;
   isActive: boolean;
   type: RouteType;
+  boardingPrice: number;
   stops: RouteStop[];
   createdAt: string;
   updatedAt: string;
@@ -63,6 +67,7 @@ interface RouteFormData {
   description: string;
   isActive: boolean;
   type: RouteType;
+  boardingPrice: number;
   stops: Array<{
     id?: string;
     locationId: string;
@@ -70,6 +75,7 @@ interface RouteFormData {
     sequenceOrder: number;
     timeOffsetMinutesArrival: number;
     stopDurationMinutes: number;
+    price: number;
   }>;
 }
 
@@ -99,7 +105,19 @@ export function RoutesPanel() {
     try {
       setLoading(true);
       const response = await axiosInstance.get('/routes');
-      setRoutes(response.data);
+
+      const routesWithFixedPrices = response.data.map((route: Route) => ({
+        ...route,
+        boardingPrice: typeof route.boardingPrice === 'string'
+          ? parseFloat(route.boardingPrice)
+          : (route.boardingPrice || 0),
+        stops: route.stops.map((stop) => ({
+          ...stop,
+          price: typeof stop.price === 'string' ? parseFloat(stop.price) : stop.price,
+        })),
+      }));
+
+      setRoutes(routesWithFixedPrices);
       setError(null);
     } catch (err) {
       console.error('Error fetching routes:', err);
@@ -178,6 +196,7 @@ export function RoutesPanel() {
         description: routeToEdit.description || '',
         isActive: routeToEdit.isActive,
         type: routeToEdit.type,
+        boardingPrice: safeParseFloat(routeToEdit.boardingPrice),
         stops: routeToEdit.stops.map((stop) => ({
           id: stop.id,
           locationId: stop.location.id,
@@ -185,6 +204,7 @@ export function RoutesPanel() {
           sequenceOrder: stop.sequenceOrder,
           timeOffsetMinutesArrival: stop.timeOffsetMinutesArrival,
           stopDurationMinutes: stop.stopDurationMinutes,
+          price: typeof stop.price === 'number' ? stop.price : 0,
         })),
       };
 
@@ -213,11 +233,10 @@ export function RoutesPanel() {
           description: data.description,
           isActive: data.isActive,
           type: data.type,
+          boardingPrice: safeParseFloat(data.boardingPrice),
         });
 
         // Update stops separately for each route
-        // This is a simplified approach - in a real application
-        // more complex logic might be needed for adding/removing/updating stops
         const stopPromises = data.stops.map(async (stop) => {
           if (stop.id) {
             // Existing stop - update
@@ -226,6 +245,7 @@ export function RoutesPanel() {
               sequenceOrder: stop.sequenceOrder,
               timeOffsetMinutesArrival: stop.timeOffsetMinutesArrival,
               stopDurationMinutes: stop.stopDurationMinutes,
+              price: safeParseFloat(stop.price),
             });
           }
           // New stop - add
@@ -234,6 +254,7 @@ export function RoutesPanel() {
             sequenceOrder: stop.sequenceOrder,
             timeOffsetMinutesArrival: stop.timeOffsetMinutesArrival,
             stopDurationMinutes: stop.stopDurationMinutes,
+            price: safeParseFloat(stop.price),
           });
         });
 
@@ -245,17 +266,19 @@ export function RoutesPanel() {
           description: data.description,
           isActive: data.isActive,
           type: data.type,
+          boardingPrice: safeParseFloat(data.boardingPrice),
           stops: data.stops.map((stop) => ({
             locationId: stop.locationId,
             sequenceOrder: stop.sequenceOrder,
             timeOffsetMinutesArrival: stop.timeOffsetMinutesArrival,
             stopDurationMinutes: stop.stopDurationMinutes,
+            price: safeParseFloat(stop.price),
           })),
         });
       }
 
-      // Update routes list
-      fetchRoutes();
+      // Update routes list from server to get the latest data
+      await fetchRoutes();
       setIsModalOpen(false);
     } catch (err) {
       console.error('Error saving route:', err);
@@ -300,6 +323,13 @@ export function RoutesPanel() {
         const firstStop = sortedStops[0];
         const lastStop = sortedStops[sortedStops.length - 1];
 
+        // Calculate total price for the route
+        // include boarding price and all stop prices except first stop
+        const totalPrice = sortedStops.reduce(
+          (sum, stop, index) => (index === 0 ? sum : sum + (safeParseFloat(stop.price))),
+          safeParseFloat(route.boardingPrice),
+        );
+
         return (
           <div className="flex flex-col space-y-1">
             {sortedStops.length > 2 ? (
@@ -310,6 +340,10 @@ export function RoutesPanel() {
                 <Tooltip
                   content={(
                     <div className="p-1">
+                      <div className="mb-2 text-xs text-gray-500">
+                        Precio base (embarque):&nbsp;
+                        {formatPrice(route.boardingPrice)}
+                      </div>
                       {sortedStops.slice(1, -1).map((stop) => (
                         <div key={stop.id} className="mb-1">
                           <div>{stop.location.name}</div>
@@ -319,6 +353,7 @@ export function RoutesPanel() {
                             min /
                             {stop.stopDurationMinutes}
                             min
+                            {typeof stop.price !== 'undefined' ? ` / ${formatPrice(stop.price)}` : ''}
                           </div>
                         </div>
                       ))}
@@ -337,19 +372,41 @@ export function RoutesPanel() {
                 <div className="text-sm">
                   <span>{lastStop.location.name}</span>
                 </div>
+                <div className="flex flex-col">
+                  <div className="text-xs text-gray-500">
+                    Precio base:&nbsp;
+                    {formatPrice(route.boardingPrice)}
+                  </div>
+                  <div className="text-sm font-medium text-green-600">
+                    {'Precio total: '}
+                    {formatPrice(totalPrice)}
+                  </div>
+                </div>
               </>
             ) : (
-              sortedStops.map((stop) => (
-                <Tooltip
-                  key={stop.id}
-                  content={`T+${stop.timeOffsetMinutesArrival} min / ${stop.stopDurationMinutes} min`}
-                  placement="bottom"
-                >
-                  <div className="text-sm cursor-help">
-                    <span>{stop.location.name}</span>
+              <>
+                {sortedStops.map((stop, index) => (
+                  <Tooltip
+                    key={stop.id}
+                    content={`T+${stop.timeOffsetMinutesArrival} min / ${stop.stopDurationMinutes} min${index > 0 ? ` / ${formatPrice(stop.price)}` : ''}`}
+                    placement="bottom"
+                  >
+                    <div className="text-sm cursor-help">
+                      <span>{stop.location.name}</span>
+                    </div>
+                  </Tooltip>
+                ))}
+                <div className="flex flex-col">
+                  <div className="text-xs text-gray-500">
+                    Precio base:&nbsp;
+                    {formatPrice(route.boardingPrice)}
                   </div>
-                </Tooltip>
-              ))
+                  <div className="text-sm font-medium text-green-600">
+                    {'Precio total: '}
+                    {formatPrice(totalPrice)}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         );

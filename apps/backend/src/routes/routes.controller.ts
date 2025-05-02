@@ -5,6 +5,7 @@ import { routesService } from './routes.service';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { CreateRouteStopDto } from './dto/create-route-stop.dto';
+import { UpdateRouteStopDto } from './dto/update-route-stop.dto';
 import { canActivate } from '../common/middlewares/auth.middleware';
 import { UserType } from '../users/user.entity';
 import { ExpressRequest } from '../common/types/request';
@@ -127,6 +128,29 @@ routesRouter.delete('/:routeId/stops/:stopId', canActivate([UserType.ADMIN]), as
   } catch (error) {
     console.error('Error removing stop:', error);
     res.status(400).json({ error: error.message || 'Error al eliminar la parada' });
+  }
+});
+
+// Update stop in route (admin only)
+routesRouter.patch('/:routeId/stops/:stopId', canActivate([UserType.ADMIN]), async (req: ExpressRequest, res: Response) => {
+  try {
+    const { routeId, stopId } = req.params;
+    const updateStopDto = plainToClass(UpdateRouteStopDto, req.body);
+    const errors = await validate(updateStopDto);
+
+    if (errors.length > 0) {
+      res.status(400).json({ errors });
+      return;
+    }
+
+    const routeStop = await routesService.updateRouteStop(routeId, stopId, updateStopDto);
+    res.json({
+      message: 'Parada actualizada con éxito',
+      routeStop,
+    });
+  } catch (error) {
+    console.error('Error updating stop:', error);
+    res.status(400).json({ error: error.message || 'Error al actualizar la parada' });
   }
 });
 

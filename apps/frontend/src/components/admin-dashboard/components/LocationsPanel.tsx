@@ -31,7 +31,7 @@ interface Location {
   updatedAt: string;
 }
 
-// Define error response interface для типизации ошибок
+// Define error response interface for error typing
 interface ApiValidationError {
   property: string;
   constraints: Record<string, string>;
@@ -162,10 +162,10 @@ export function LocationsPanel() {
     }
 
     try {
-      // Создаем копию данных формы для преобразования значений
+      // Create a copy of form data for value transformation
       const formDataToSubmit = {
         ...formData,
-        // Преобразуем строковые значения в числа, если они определены
+        // Convert string values to numbers if they are defined
         latitude: formData.latitude !== undefined ? Number(formData.latitude) : undefined,
         longitude: formData.longitude !== undefined ? Number(formData.longitude) : undefined,
       };
@@ -185,7 +185,7 @@ export function LocationsPanel() {
       handleCloseModal();
     } catch (error: unknown) {
       console.error('Error saving location:', error);
-      // Показываем более детальную ошибку, если доступно
+      // Show more detailed error if available
       if (error && typeof error === 'object' && 'response' in error
           && error.response && typeof error.response === 'object'
           && 'data' in error.response && error.response.data
@@ -201,7 +201,7 @@ export function LocationsPanel() {
     }
   };
 
-  // Восстановим handleDelete для модального окна
+  // Restore handleDelete for modal window
   const handleDelete = async () => {
     if (!currentId) return;
 
@@ -218,9 +218,9 @@ export function LocationsPanel() {
     }
   };
 
-  // Функция прямого удаления локации из карточки
+  // Function for direct location deletion from the card
   const handleDirectDelete = (locationId: string) => {
-    // Используем отдельную функцию без состояния компонента
+    // Use separate function without component state
     const deleteLocation = async () => {
       try {
         await axiosInstance.delete(`/locations/${locationId}`);

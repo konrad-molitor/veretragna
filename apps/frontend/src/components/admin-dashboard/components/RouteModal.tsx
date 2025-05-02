@@ -9,17 +9,24 @@ import {
   Input,
   Select,
   SelectItem,
-  Checkbox,
   Card,
   CardBody,
   Tooltip,
+  Textarea,
+  Switch,
 } from '@heroui/react';
-import { PlusCircleIcon, XCircleIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
+import {
+  PlusCircleIcon,
+  XCircleIcon,
+  ArrowsUpDownIcon,
+  PencilIcon,
+} from '@heroicons/react/24/outline';
 
-// Import DND library
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import axiosInstance from '../../../app/utils/axiosInstance';
+import safeParseFloat from '../../../app/utils/safeParseFloat';
+import formatPrice from '../../../app/utils/formatPrice';
 
 interface Location {
   id: string;
@@ -34,6 +41,7 @@ interface RouteStop {
   sequenceOrder: number;
   timeOffsetMinutesArrival: number;
   stopDurationMinutes: number;
+  price: number;
 }
 
 enum RouteType {
@@ -47,6 +55,7 @@ interface RouteFormData {
   description: string;
   isActive: boolean;
   type: RouteType;
+  boardingPrice: number;
   stops: RouteStop[];
 }
 
@@ -60,6 +69,7 @@ interface RouteModalProps {
     description: string;
     isActive: boolean;
     type: RouteType;
+    boardingPrice: number;
     stops: RouteStop[];
   };
   isEditing: boolean;
@@ -70,6 +80,7 @@ const defaultFormData: RouteFormData = {
   description: '',
   isActive: true,
   type: RouteType.REGULAR,
+  boardingPrice: 0,
   stops: [],
 };
 
@@ -109,8 +120,13 @@ function DraggableStop({
     },
   });
 
-  // Tooltip text with time information
-  const timeInfo = `Tiempo de llegada: ${stop.timeOffsetMinutesArrival} min desde inicio\nDuración de la parada: ${stop.stopDurationMinutes} min`;
+  // Check if this is the first stop
+  const isFirstStop = stop.sequenceOrder === 1;
+
+  // Tooltip text with time and price information
+  const timeInfo = `Tiempo de llegada: ${stop.timeOffsetMinutesArrival} min desde inicio
+Duración de la parada: ${stop.stopDurationMinutes} min
+${!isFirstStop ? `Precio: ${formatPrice(stop.price)}` : ''}`;
 
   return (
     <div
@@ -132,7 +148,14 @@ function DraggableStop({
               )}
               <div className="flex-1">
                 <Tooltip content={timeInfo} placement="bottom">
-                  <div className="font-medium cursor-help">{stop.location?.name}</div>
+                  <div className="font-medium cursor-help">
+                    {stop.location?.name}
+                    {!isFirstStop && (
+                      <span className="ml-2 text-sm text-gray-500">
+                        {formatPrice(stop.price)}
+                      </span>
+                    )}
+                  </div>
                 </Tooltip>
               </div>
             </div>
@@ -144,9 +167,7 @@ function DraggableStop({
                 onClick={() => onEdit(index)}
                 type="button"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                </svg>
+                <PencilIcon className="h-4 w-4" />
               </Button>
               <Button
                 isIconOnly
@@ -189,6 +210,7 @@ function StopFormModal({
     sequenceOrder: 0,
     timeOffsetMinutesArrival: 0,
     stopDurationMinutes: 5,
+    price: 0,
   });
 
   // Initialize form data when modal opens
@@ -196,6 +218,8 @@ function StopFormModal({
     if (editStop) {
       setFormData({
         ...editStop,
+        // Ensure price is a number
+        price: typeof editStop.price === 'number' ? editStop.price : 0,
       });
     } else {
       setFormData({
@@ -203,14 +227,22 @@ function StopFormModal({
         sequenceOrder: 0,
         timeOffsetMinutesArrival: 0,
         stopDurationMinutes: 5,
+        price: 0,
       });
     }
   }, [editStop, isOpen]);
 
   const handleSubmit = () => {
-    onSave(formData);
+    onSave({
+      ...formData,
+      // Ensure price is a number before saving
+      price: typeof formData.price === 'number' ? formData.price : 0,
+    });
     onClose();
   };
+
+  // Determine if this is the first stop (sequenceOrder = 1)
+  const isFirstStop = formData.sequenceOrder === 1;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -236,7 +268,7 @@ function StopFormModal({
             <Input
               type="number"
               label="Tiempo de llegada (minutos desde inicio)"
-              value={formData.timeOffsetMinutesArrival.toString()}
+              value={formData.timeOffsetMinutesArrival?.toString()}
               onChange={(e) => setFormData({
                 ...formData,
                 timeOffsetMinutesArrival: parseInt(e.target.value, 10) || 0,
@@ -247,13 +279,27 @@ function StopFormModal({
             <Input
               type="number"
               label="Duración de la parada (minutos)"
-              value={formData.stopDurationMinutes.toString()}
+              value={formData.stopDurationMinutes?.toString()}
               onChange={(e) => setFormData({
                 ...formData,
                 stopDurationMinutes: parseInt(e.target.value, 10) || 0,
               })}
               required
               min="0"
+            />
+            <Input
+              type="number"
+              label="Precio del segmento"
+              value={typeof formData.price === 'number' ? formData.price.toString() : '0'}
+              onChange={(e) => setFormData({
+                ...formData,
+                price: safeParseFloat(e.target.value),
+              })}
+              required
+              min="0"
+              step="0.01"
+              isDisabled={isFirstStop}
+              description={isFirstStop ? 'El primer segmento no tiene precio' : undefined}
             />
           </div>
         </ModalBody>
@@ -495,15 +541,23 @@ function StopsEditor({ stops, onStopsChange }: StopsEditorProps) {
   );
 }
 
+
 // Main route editing modal component
-function RouteModal({
+export function RouteModal({
   isOpen,
   onClose,
   onSave,
   initialData,
   isEditing,
 }: RouteModalProps) {
-  const [formData, setFormData] = useState<RouteFormData>(defaultFormData);
+  const [formData, setFormData] = useState<RouteFormData>({
+    name: '',
+    description: '',
+    isActive: true,
+    type: RouteType.REGULAR,
+    boardingPrice: 0,
+    stops: [],
+  });
 
   // Initialize form data when modal opens
   useEffect(() => {
@@ -513,22 +567,42 @@ function RouteModal({
         description: initialData.description,
         isActive: initialData.isActive,
         type: initialData.type,
+        boardingPrice: safeParseFloat(initialData.boardingPrice),
         stops: initialData.stops || [],
       });
     } else {
-      setFormData(defaultFormData);
+      // Reset form data
+      setFormData({
+        name: '',
+        description: '',
+        isActive: true,
+        type: RouteType.REGULAR,
+        boardingPrice: 0,
+        stops: [],
+      });
     }
   }, [initialData, isOpen]);
 
-  // Handle form field changes
-  const handleInputChange = (
-    field: keyof RouteFormData,
-    value: string | boolean | RouteType | RouteStop[],
+  // Handle form data changes
+  const handleChange = (
+    key: keyof RouteFormData,
+    value: string | boolean | RouteType | RouteStop[] | number,
   ) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [key]: value,
     }));
+  };
+
+  // Calculate total price of the route
+  const calculateTotalPrice = (): string => {
+    const boardingPrice = formData.boardingPrice || 0;
+    const segmentsPrice = formData.stops.reduce(
+      (sum, stop, index) => (index === 0 ? sum : sum + (typeof stop.price === 'number' ? stop.price : 0)),
+      0,
+    );
+    const totalPrice = boardingPrice + segmentsPrice;
+    return formatPrice(totalPrice);
   };
 
   // Handle form submission
@@ -544,57 +618,65 @@ function RouteModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="3xl">
       <ModalContent>
-        <ModalHeader>
-          {isEditing ? 'Editar Ruta' : 'Crear Nueva Ruta'}
+        <ModalHeader className="flex flex-col gap-1">
+          {isEditing ? 'Editar ruta' : 'Crear nueva ruta'}
         </ModalHeader>
         <ModalBody>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+          <form>
+            <div className="grid grid-cols-1 gap-4 mb-4">
               <Input
-                label="Nombre de la ruta"
+                label="Nombre"
+                placeholder="Ingrese el nombre de la ruta"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                required
+                onChange={(e) => handleChange('name', e.target.value)}
+                autoFocus
               />
-              <Input
+              <Textarea
                 label="Descripción"
+                placeholder="Ingrese la descripción de la ruta"
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) => handleChange('description', e.target.value)}
               />
-              <Select
-                label="Tipo de ruta"
-                selectedKeys={[formData.type]}
-                onChange={(e) => handleInputChange('type', e.target.value as RouteType)}
-                required
-              >
-                <SelectItem key={RouteType.DIRECT}>
-                  Directo
-                </SelectItem>
-                <SelectItem key={RouteType.SEMI_DIRECT}>
-                  Semi-Directo
-                </SelectItem>
-                <SelectItem key={RouteType.REGULAR}>
-                  Regular
-                </SelectItem>
-              </Select>
-              <div className="flex items-center">
-                <Checkbox
-                  isSelected={formData.isActive}
-                  onValueChange={(value) => handleInputChange('isActive', value)}
-                  id="route-active"
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select
+                  label="Tipo de ruta"
+                  value={formData.type}
+                  onChange={(e) => handleChange('type', e.target.value as RouteType)}
                 >
-                  Ruta activa
-                </Checkbox>
+                  <SelectItem key="direct">Directa</SelectItem>
+                  <SelectItem key="semi-direct">Semi-directa</SelectItem>
+                  <SelectItem key="regular">Regular</SelectItem>
+                </Select>
+                <Switch
+                  isSelected={formData.isActive}
+                  onValueChange={(value) => handleChange('isActive', value)}
+                >
+                  Activa
+                </Switch>
+                <Input
+                  type="number"
+                  label="Precio base (embarque)"
+                  placeholder="0.00"
+                  value={formData.boardingPrice.toString()}
+                  onChange={(e) => handleChange('boardingPrice', safeParseFloat(e.target.value))}
+                  step="0.01"
+                  min="0"
+                  startContent={(
+                    <div className="pointer-events-none flex items-center">
+                      <span className="text-default-400 text-small">$</span>
+                    </div>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <StopsEditor
+                  stops={formData.stops}
+                  onStopsChange={(stops) => handleChange('stops', stops)}
+                />
               </div>
             </div>
-
-            <div className="space-y-4">
-              <StopsEditor
-                stops={formData.stops}
-                onStopsChange={(stops) => handleInputChange('stops', stops)}
-              />
-            </div>
-          </div>
+          </form>
         </ModalBody>
         <ModalFooter>
           <Button variant="flat" onClick={onClose}>
@@ -609,5 +691,4 @@ function RouteModal({
   );
 }
 
-export { RouteModal };
 export default RouteModal;

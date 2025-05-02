@@ -151,4 +151,12 @@ export const cities = [
     longitude: -54.3833,
     description: 'Treinta y Tres es la capital del departamento homónimo. Nombrada en honor a los 33 patriotas que lucharon por la independencia uruguaya.',
   },
+  {
+    name: 'Atlantida',
+    address: 'Atlantida, Uruguay',
+    imageUrl: 'cities/atlantida.jpg',
+    latitude: -34.5000,
+    longitude: -55.7500,
+    description: 'Atlantida es una ciudad ubicada en el departamento de Atlantida, Uruguay. Es conocida por su clima cálido y su rica cultura.',
+  },
 ];

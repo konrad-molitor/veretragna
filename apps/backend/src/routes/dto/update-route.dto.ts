@@ -3,7 +3,10 @@ import {
   IsOptional,
   IsBoolean,
   IsEnum,
+  IsNumber,
+  Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { RouteType } from '../route.entity';
 
 export class UpdateRouteDto {
@@ -22,4 +25,10 @@ export class UpdateRouteDto {
   @IsEnum(RouteType)
   @IsOptional()
     type?: RouteType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? parseFloat(value) : value))
+    boardingPrice?: number;
 }
