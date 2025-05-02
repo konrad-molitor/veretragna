@@ -22,7 +22,7 @@ const initializeApp = async () => {
     await dataSource.initialize();
     console.log('Data Source has been initialized!');
 
-    // Инициализация таблицы местоположений из данных о городах
+    // Initialize locations table from cities data
     await locationService.initializeLocations();
 
     const app = express();

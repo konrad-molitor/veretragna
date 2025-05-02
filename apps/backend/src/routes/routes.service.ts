@@ -4,6 +4,7 @@ import { RouteStop } from './route-stop.entity';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { CreateRouteStopDto } from './dto/create-route-stop.dto';
+import { UpdateRouteStopDto } from './dto/update-route-stop.dto';
 import { Location } from '../locations/location.entity';
 
 class RoutesService {
@@ -44,7 +45,10 @@ class RoutesService {
 
     // Create and save route
     const route = new Route();
-    Object.assign(route, routeData);
+    Object.assign(route, {
+      ...routeData,
+      boardingPrice: typeof routeData.boardingPrice === 'number' ? routeData.boardingPrice : 0,
+    });
     await route.save();
 
     // If stops are provided, create them
@@ -76,6 +80,7 @@ class RoutesService {
       routeStop.sequenceOrder = stopDto.sequenceOrder;
       routeStop.timeOffsetMinutesArrival = stopDto.timeOffsetMinutesArrival;
       routeStop.stopDurationMinutes = stopDto.stopDurationMinutes;
+      routeStop.price = typeof stopDto.price === 'number' ? stopDto.price : 0;
       return routeStop;
     });
 
@@ -87,9 +92,13 @@ class RoutesService {
   async updateRoute(id: string, updateRouteDto: UpdateRouteDto): Promise<Route> {
     const route = await this.getRouteById(id);
 
-    Object.assign(route, updateRouteDto);
-
+    // Update route fields
+    Object.assign(route, {
+      ...updateRouteDto,
+      boardingPrice: typeof updateRouteDto.boardingPrice === 'number' ? updateRouteDto.boardingPrice : route.boardingPrice,
+    });
     await route.save();
+
     return route;
   }
 
@@ -124,6 +133,7 @@ class RoutesService {
     routeStop.sequenceOrder = stopDto.sequenceOrder;
     routeStop.timeOffsetMinutesArrival = stopDto.timeOffsetMinutesArrival;
     routeStop.stopDurationMinutes = stopDto.stopDurationMinutes;
+    routeStop.price = typeof stopDto.price === 'number' ? stopDto.price : 0;
 
     await routeStop.save();
     return routeStop;
@@ -143,6 +153,62 @@ class RoutesService {
     }
 
     await routeStop.softRemove();
+  }
+
+  // Update a stop from a route
+  async updateRouteStop(
+    routeId: string,
+    stopId: string,
+    updateDto: UpdateRouteStopDto,
+  ): Promise<RouteStop> {
+    const routeStop = await RouteStop.findOne({
+      where: {
+        id: stopId,
+        route: { id: routeId },
+      },
+      relations: ['location'],
+    });
+
+    if (!routeStop) {
+      throw new Error('Parada de ruta no encontrada');
+    }
+
+    // If locationId is provided, find the location
+    if (updateDto.locationId) {
+      const location = await Location.findOneByOrFail({ id: updateDto.locationId });
+      routeStop.location = location;
+    }
+
+    // If sequenceOrder is changing, check if it conflicts with another stop
+    if (updateDto.sequenceOrder && updateDto.sequenceOrder !== routeStop.sequenceOrder) {
+      const existingStop = await RouteStop.findOne({
+        where: {
+          route: { id: routeId },
+          sequenceOrder: updateDto.sequenceOrder,
+        },
+      });
+
+      if (existingStop && existingStop.id !== stopId) {
+        throw new Error(`Ya existe una parada con el orden de secuencia ${updateDto.sequenceOrder}`);
+      }
+    }
+
+    // Update fields
+    if (typeof updateDto.sequenceOrder === 'number') {
+      routeStop.sequenceOrder = updateDto.sequenceOrder;
+    }
+    if (typeof updateDto.timeOffsetMinutesArrival === 'number') {
+      routeStop.timeOffsetMinutesArrival = updateDto.timeOffsetMinutesArrival;
+    }
+    if (typeof updateDto.stopDurationMinutes === 'number') {
+      routeStop.stopDurationMinutes = updateDto.stopDurationMinutes;
+    }
+    if (typeof updateDto.price === 'number') {
+      routeStop.price = updateDto.price;
+    }
+
+    await routeStop.save();
+    return routeStop;
   }
 }
 
