@@ -1,6 +1,8 @@
 import {
   IsEmail, IsOptional, MinLength, Matches,
+  IsEnum,
 } from 'class-validator';
+import { UserStatus, UserType } from '../user.entity';
 
 export class UpdateUserDto {
     @IsOptional()
@@ -19,4 +21,12 @@ export class UpdateUserDto {
       message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
     })
       password?: string;
+
+  @IsOptional()
+  @IsEnum(UserStatus)
+    status?: UserStatus;
+
+  @IsOptional()
+  @IsEnum(UserType)
+    type?: UserType;
 }
