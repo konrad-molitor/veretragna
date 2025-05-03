@@ -203,6 +203,32 @@ userRouter.patch('/:id', canActivate([UserType.USER]), async (req: ExpressReques
 // Get all users (admin only)
 userRouter.get('/', canActivate([UserType.ADMIN]), async (req: ExpressRequest, res: Response) => {
   try {
+    const { type } = req.query;
+
+    // If user type is specified, check if it's valid
+    if (type && typeof type === 'string') {
+      // Check if the user type is valid
+      if (!Object.values(UserType).includes(type as UserType)) {
+        res.status(400).json({ error: 'Tipo de usuario no válido' });
+        return;
+      }
+
+      // Get users filtered by type
+      const users = await userService.getUsersByType(type as UserType);
+      res.json(users.map((user) => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        status: user.status,
+        type: user.type,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      })));
+      return;
+    }
+
+    // If type is not specified, return all users
     const users = await userService.getAllUsers();
     res.json(users.map((user) => ({
       id: user.id,

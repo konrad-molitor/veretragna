@@ -5,10 +5,10 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
-import { 
-  EventContentArg, 
+import {
+  EventContentArg,
   EventDropArg,
-  EventClickArg 
+  EventClickArg,
 } from '@fullcalendar/core';
 import { DayOfWeek } from '../../../types/schedule';
 import axiosInstance from '../../../app/utils/axiosInstance';
@@ -218,13 +218,13 @@ export function SchedulesPanel() {
     try {
       const scheduleId = info.event.id;
       const newDate = info.event.start;
-      
+
       if (!newDate) {
         toast.error('Error al actualizar el horario: fecha inválida');
         info.revert();
         return;
       }
-      
+
       const dayOfWeek = getDayOfWeekFromIndex(newDate.getDay());
       const hours = newDate.getHours();
       const minutes = newDate.getMinutes();
@@ -387,8 +387,8 @@ export function SchedulesPanel() {
   // Calculate arrival times at stops for display in the modal window
   const calculateStopTimes = (): StopTime[] => {
     if (
-      !selectedSchedule 
-      || !selectedSchedule.route.stops 
+      !selectedSchedule
+      || !selectedSchedule.route.stops
       || selectedSchedule.route.stops.length === 0
     ) {
       return [];
@@ -534,8 +534,8 @@ export function SchedulesPanel() {
               minute: '2-digit',
               hour12: false,
             }}
-            slotMinTime="05:00:00"
-            slotMaxTime="23:00:00"
+            slotMinTime="00:00:00"
+            slotMaxTime="23:59:59"
             height="auto"
             events={getCalendarEvents()}
             droppable

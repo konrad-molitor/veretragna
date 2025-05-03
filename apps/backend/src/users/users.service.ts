@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { User, UserStatus } from './user.entity';
+import { User, UserStatus, UserType } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -42,6 +42,16 @@ class UserService {
     return hexString.toUpperCase();
   }
 
+  // Check if email is in the admin list
+  private isAdminEmail(email: string): boolean {
+    const adminEmails = process.env.ADMIN_EMAILS || '';
+    if (!adminEmails) return false;
+
+    // Split by comma and trim whitespace
+    const adminEmailsList = adminEmails.split(',').map((e) => e.trim().toLowerCase());
+    return adminEmailsList.includes(email.toLowerCase());
+  }
+
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const {
       email, firstName, lastName, password,
@@ -64,6 +74,13 @@ class UserService {
     user.passwordHash = passwordHash;
     user.otpCode = otpCode;
     user.status = UserStatus.UNCONFIRMED;
+
+    // Check if user should be an admin
+    if (this.isAdminEmail(email)) {
+      user.type = UserType.ADMIN;
+    } else {
+      user.type = UserType.USER;
+    }
 
     await user.save();
 
@@ -125,6 +142,14 @@ class UserService {
       throw new Error('Contraseña inválida');
     }
 
+    // Check if user should be an admin but isn't
+    const isAdminEmail = this.isAdminEmail(email);
+    if (isAdminEmail && user.type !== UserType.ADMIN) {
+      user.type = UserType.ADMIN;
+      await user.save();
+      console.log(`Usuario ${email} ha sido ascendido a administrador.`);
+    }
+
     // Create JWT token
     const token = this.generateToken(user);
 
@@ -135,7 +160,7 @@ class UserService {
     const user = await this.findUserById(userId);
 
     const {
-      email, firstName, lastName, password,
+      email, firstName, lastName, password, status, type,
     } = updateUserDto;
 
     if (email && email !== user.email) {
@@ -158,12 +183,27 @@ class UserService {
       user.passwordHash = await bcrypt.hash(password, 10);
     }
 
+    if (status) {
+      user.status = status;
+    }
+
+    if (type) {
+      user.type = type;
+    }
+
     await user.save();
 
     return user;
   }
 
   async getAllUsers(): Promise<User[]> {
+    return User.find();
+  }
+
+  async getUsersByType(type?: UserType): Promise<User[]> {
+    if (type) {
+      return User.find({ where: { type } });
+    }
     return User.find();
   }
 

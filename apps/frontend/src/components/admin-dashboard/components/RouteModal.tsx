@@ -541,7 +541,6 @@ function StopsEditor({ stops, onStopsChange }: StopsEditorProps) {
   );
 }
 
-
 // Main route editing modal component
 export function RouteModal({
   isOpen,
