@@ -17,7 +17,7 @@ type UserData = {
 };
 
 type DashboardPageProps = {
-  contentType?: 'dashboard' | 'profile';
+  contentType?: 'dashboard' | 'profile' | 'search';
 };
 
 export function DashboardPage({ contentType = 'dashboard' }: DashboardPageProps) {
@@ -34,11 +34,16 @@ export function DashboardPage({ contentType = 'dashboard' }: DashboardPageProps)
 
   // Determine content based on path or contentType prop
   const isProfilePage = contentType === 'profile' || location.pathname === '/dashboard/me';
+  const isSearchPage = contentType === 'search' || location.pathname === '/dashboard/search';
 
-  // Determine which dashboard to render based on user type
+  // Determine which dashboard to render based on user type and contentType
   const renderContent = () => {
     if (isProfilePage) {
       return <UserProfile />;
+    }
+
+    if (isSearchPage) {
+      return <UserDashboard />;
     }
 
     if (!user) return null;

@@ -11,7 +11,6 @@ import AuthForm from '../components/AuthForm';
 import EmailConfirmation from '../components/EmailConfirmation';
 import ResetPassword from '../components/ResetPassword';
 import DashboardPage from './pages/DashboardPage';
-import UserProfile from '../components/user-profile/UserProfile';
 
 function LandingPage() {
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -91,6 +90,7 @@ export function App() {
       <Route path="/dashboard">
         <Route index element={<DashboardPage />} />
         <Route path="me" element={<DashboardPage contentType="profile" />} />
+        <Route path="search" element={<DashboardPage contentType="search" />} />
       </Route>
       <Route
         path="/"
