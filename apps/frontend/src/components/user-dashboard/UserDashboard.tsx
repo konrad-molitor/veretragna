@@ -26,6 +26,13 @@ interface Location {
   name: string;
 }
 
+interface Segment {
+  tripId: string;
+  depart: { locId: string; time: Date };
+  arrive: { locId: string; time: Date };
+  price: number;
+}
+
 interface TripResult {
   id: string;
   departureTime: string;
@@ -34,6 +41,14 @@ interface TripResult {
   transfers: number;
   departureLocation: string | undefined;
   arrivalLocation: string | undefined;
+}
+
+interface SearchResponse {
+  message: string;
+  result: {
+    outbound: Segment[] | null;
+    inbound: Segment[] | null;
+  };
 }
 
 export function UserDashboard() {
@@ -99,46 +114,55 @@ export function UserDashboard() {
 
       // Format date for API
       const formattedDepartureDate = departureDate.toString();
-      const formattedReturnDate = isOneWay ? undefined : returnDate.toString();
+      const formattedReturnDate = isOneWay ? formattedDepartureDate : returnDate.toString();
 
-      // API request simulation (replace with real API request later)
-      setTimeout(() => {
-        // Real API call should be here
-        // const response = await axiosInstance.get('/trip-search', {
-        //   params: {
-        //     fromLocationId: fromLocation,
-        //     toLocationId: toLocation,
-        //     departureDate: formattedDepartureDate,
-        //     returnDate: formattedReturnDate,
-        //     classType: classType === 'any' ? undefined : classType,
-        //   },
-        // });
+      // Реальный API запрос к нашему новому роуту
+      const response = await axiosInstance.post<SearchResponse>('/trips/search', {
+        fromLocationId: fromLocation,
+        toLocationId: toLocation,
+        departureDate: formattedDepartureDate,
+        returnDate: formattedReturnDate,
+        minTransferMinutes: 5,
+        searchWindowDays: 30,
+      });
 
-        // Mock data with fake results
-        const mockResults = [
-          {
-            id: '1',
-            departureTime: '08:00',
-            arrivalTime: '10:30',
-            price: 2500,
-            transfers: 0,
-            departureLocation: locations.find((loc) => loc.id === fromLocation)?.name,
-            arrivalLocation: locations.find((loc) => loc.id === toLocation)?.name,
-          },
-          {
-            id: '2',
-            departureTime: '12:30',
-            arrivalTime: '15:00',
-            price: 2200,
-            transfers: 1,
-            departureLocation: locations.find((loc) => loc.id === fromLocation)?.name,
-            arrivalLocation: locations.find((loc) => loc.id === toLocation)?.name,
-          },
-        ];
+      // Преобразование полученных сегментов в формат TripResult
+      const results: TripResult[] = [];
 
-        setSearchResults(mockResults);
-        setIsLoading(false);
-      }, 1500);
+      if (response.data.result.outbound) {
+        const { outbound } = response.data.result;
+        const startSegment = outbound[0];
+        const endSegment = outbound[outbound.length - 1];
+
+        results.push({
+          id: `outbound-${new Date().getTime()}`,
+          departureTime: new Date(startSegment.depart.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          arrivalTime: new Date(endSegment.arrive.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          price: outbound.reduce((sum, segment) => sum + segment.price, 0),
+          transfers: outbound.length - 1,
+          departureLocation: locations.find((loc) => loc.id === startSegment.depart.locId)?.name,
+          arrivalLocation: locations.find((loc) => loc.id === endSegment.arrive.locId)?.name,
+        });
+      }
+
+      if (response.data.result.inbound && !isOneWay) {
+        const { inbound } = response.data.result;
+        const startSegment = inbound[0];
+        const endSegment = inbound[inbound.length - 1];
+
+        results.push({
+          id: `inbound-${new Date().getTime()}`,
+          departureTime: new Date(startSegment.depart.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          arrivalTime: new Date(endSegment.arrive.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          price: inbound.reduce((sum, segment) => sum + segment.price, 0),
+          transfers: inbound.length - 1,
+          departureLocation: locations.find((loc) => loc.id === startSegment.depart.locId)?.name,
+          arrivalLocation: locations.find((loc) => loc.id === endSegment.arrive.locId)?.name,
+        });
+      }
+
+      setSearchResults(results);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error searching for trips:', error);
       setIsLoading(false);

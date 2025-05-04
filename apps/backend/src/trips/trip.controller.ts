@@ -8,6 +8,8 @@ import { canActivate } from '../common/middlewares/auth.middleware';
 import { UserType } from '../users/user.entity';
 import { ExpressRequest } from '../common/types/request';
 import { TripStatus } from './trip.entity';
+import { tripsSearchService } from './trips-search.service';
+import { SearchTripsDto } from './dto/search-trips.dto';
 
 const tripRouter = Router();
 
@@ -103,8 +105,8 @@ tripRouter.patch('/bulk', canActivate([UserType.ADMIN]), async (req: ExpressRequ
     // Update all trips in batch
     const updatedTrips = await tripService.updateTripsInBulk(
       tripIds,
-      cleanedUpdateData, 
-      shouldUpdateStatus
+      cleanedUpdateData,
+      shouldUpdateStatus,
     );
 
     res.json({
@@ -228,6 +230,61 @@ tripRouter.post('/batch', canActivate([UserType.ADMIN]), async (req: ExpressRequ
   } catch (error) {
     console.error('Error in batch trip creation:', error);
     res.status(400).json({ error: error.message || 'Error al crear los viajes en lote' });
+  }
+});
+
+// Search for trips with connections between locations
+tripRouter.post('/search', async (req: Request, res: Response) => {
+  try {
+    const searchTripsDto = plainToClass(SearchTripsDto, req.body);
+    const errors = await validate(searchTripsDto);
+
+    if (errors.length > 0) {
+      res.status(400).json({ errors });
+      return;
+    }
+
+    const {
+      fromLocationId,
+      toLocationId,
+      departureDate,
+      returnDate,
+      minTransferMinutes = 5,
+      searchWindowDays = 30,
+    } = searchTripsDto;
+
+    const result = await tripsSearchService.findRoundTrip(
+      fromLocationId,
+      toLocationId,
+      new Date(departureDate),
+      new Date(returnDate),
+      minTransferMinutes * 60 * 1000, // конвертация в миллисекунды
+      searchWindowDays,
+    );
+
+    if (!result.outbound) {
+      res.status(404).json({
+        error: 'No se encontraron viajes disponibles para la ruta de ida',
+      });
+      return;
+    }
+
+    if (!result.inbound) {
+      res.status(404).json({
+        error: 'No se encontraron viajes disponibles para la ruta de vuelta',
+      });
+      return;
+    }
+
+    res.json({
+      message: 'Búsqueda completada con éxito',
+      result,
+    });
+  } catch (error) {
+    console.error('Error searching for trips:', error);
+    res.status(500).json({
+      error: error.message || 'Error en la búsqueda de viajes',
+    });
   }
 });
 

@@ -50,4 +50,10 @@ export class Trip extends BaseEntity {
     default: TripStatus.PENDING,
   })
     status: TripStatus;
+
+  @Column({ default: 0 })
+    bookedSeats: number;
+
+  @Column({ default: 0 })
+    capacity: number;
 }
