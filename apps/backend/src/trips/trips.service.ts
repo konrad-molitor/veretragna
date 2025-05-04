@@ -124,6 +124,73 @@ class TripService {
     return trip;
   }
 
+  // Bulk update trips
+  async updateTripsInBulk(
+    tripIds: string[],
+    updateData: Partial<UpdateTripDto>,
+    shouldUpdateStatus = false,
+  ): Promise<Trip[]> {
+    // Get all trips with IDs
+    const trips = await Trip.find({
+      where: { id: In(tripIds) },
+      relations: ['schedule', 'schedule.route', 'bus', 'driver'],
+    });
+
+    if (trips.length === 0) {
+      throw new Error('No se encontraron viajes para actualizar');
+    }
+
+    // Validate bus if provided
+    if (updateData.busId) {
+      const bus = await Bus.findOneBy({ id: updateData.busId });
+      if (!bus) {
+        throw new Error('Autobús no encontrado');
+      }
+    }
+
+    // Validate driver if provided
+    if (updateData.driverId) {
+      const driver = await User.findOne({
+        where: {
+          id: updateData.driverId,
+          type: UserType.DRIVER,
+        },
+      });
+      if (!driver) {
+        throw new Error('Conductor no encontrado');
+      }
+    }
+
+    // Update each trip
+    const updatePromises = trips.map(async (trip) => {
+      // Create a copy of updateData
+      const tripUpdateData = { ...updateData };
+
+      // Update status to SCHEDULED if both bus and driver are provided
+      // and current status is PENDING
+      if (
+        shouldUpdateStatus
+        && trip.status === TripStatus.PENDING
+        && ((updateData.busId || trip.busId) && (updateData.driverId || trip.driverId))
+      ) {
+        tripUpdateData.status = TripStatus.SCHEDULED;
+      }
+
+      // Skip updating trips that are completed, cancelled or ongoing
+      if (
+        [TripStatus.COMPLETED, TripStatus.CANCELLED, TripStatus.ONGOING].includes(trip.status)
+      ) {
+        return trip;
+      }
+
+      // Apply updates
+      Object.assign(trip, tripUpdateData);
+      return trip.save();
+    });
+
+    return Promise.all(updatePromises);
+  }
+
   // Delete trip
   async deleteTrip(id: string): Promise<void> {
     const trip = await this.getTripById(id);

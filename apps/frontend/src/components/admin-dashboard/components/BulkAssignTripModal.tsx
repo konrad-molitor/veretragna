@@ -34,13 +34,13 @@ interface Trip {
   driverId?: string;
 }
 
-interface AssignTripModalProps {
+interface BulkAssignTripModalProps {
   isOpen: boolean;
   onClose: () => void;
-  trip: Trip | null;
+  selectedTrips: Trip[];
 }
 
-function AssignTripModal({ isOpen, onClose, trip }: AssignTripModalProps) {
+function BulkAssignTripModal({ isOpen, onClose, selectedTrips }: BulkAssignTripModalProps) {
   // State
   const [buses, setBuses] = useState<Bus[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -68,19 +68,18 @@ function AssignTripModal({ isOpen, onClose, trip }: AssignTripModalProps) {
     }
   };
 
-  // Fetch buses and drivers when modal opens
+  // Reset form when modal opens
   useEffect(() => {
-    if (isOpen && trip) {
+    if (isOpen) {
       fetchData();
-      // Pre-select existing values if present
-      setSelectedBusId(trip.busId || '');
-      setSelectedDriverId(trip.driverId || '');
+      setSelectedBusId('');
+      setSelectedDriverId('');
     }
-  }, [isOpen, trip]);
+  }, [isOpen]);
 
   // Handle form submission
   const handleSubmit = async () => {
-    if (!trip) return;
+    if (selectedTrips.length === 0) return;
 
     // Validate input
     if (!selectedBusId && !selectedDriverId) {
@@ -96,19 +95,25 @@ function AssignTripModal({ isOpen, onClose, trip }: AssignTripModalProps) {
       if (selectedBusId) updateData.busId = selectedBusId;
       if (selectedDriverId) updateData.driverId = selectedDriverId;
 
-      // If both bus and driver are assigned, update status to SCHEDULED
-      if (selectedBusId && selectedDriverId && trip.status === 'pending') {
-        updateData.status = 'scheduled';
+      // If both bus and driver are assigned, update status to SCHEDULED for pending trips
+      if (selectedBusId && selectedDriverId) {
+        updateData.updateStatus = 'true'; // This will let backend know to update status if needed
       }
 
-      // Update trip
-      await axiosInstance.patch(`/trips/${trip.id}`, updateData);
+      // Get all trip IDs
+      const tripIds = selectedTrips.map((trip) => trip.id);
 
-      toast.success('Viaje actualizado correctamente');
+      // Send bulk update request
+      await axiosInstance.patch('/trips/bulk', {
+        tripIds,
+        updateData,
+      });
+
+      toast.success(`${selectedTrips.length} viajes actualizados correctamente`);
       onClose();
     } catch (error) {
-      console.error('Error updating trip:', error);
-      toast.error('Error al actualizar el viaje');
+      console.error('Error updating trips:', error);
+      toast.error('Error al actualizar los viajes');
     } finally {
       setIsSubmitting(false);
     }
@@ -125,23 +130,43 @@ function AssignTripModal({ isOpen, onClose, trip }: AssignTripModalProps) {
         {(closeModal) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              Asignar Autobús y Conductor
+              Asignación Masiva -
+              {' '}
+              {selectedTrips.length}
+              {' '}
+              viaje
+              {selectedTrips.length !== 1 ? 's' : ''}
             </ModalHeader>
             <ModalBody>
               {loading ? (
                 <div className="text-center py-4">Cargando datos...</div>
               ) : (
                 <div className="space-y-4">
+                  <p className="text-sm text-gray-700">
+                    Está a punto de actualizar
+                    {' '}
+                    {selectedTrips.length}
+                    {' '}
+                    viaje
+                    {selectedTrips.length !== 1 ? 's' : ''}
+                    .
+                    Esta operación reemplazará la asignación actual de autobús y/o
+                    conductor para todos los viajes seleccionados.
+                  </p>
                   <div>
-                    <label htmlFor="bus-select" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="bulk-bus-select"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Autobús
                     </label>
                     <Select
-                      id="bus-select"
+                      id="bulk-bus-select"
                       placeholder="Seleccionar autobús"
                       selectedKeys={selectedBusId ? [selectedBusId] : []}
                       onChange={(e) => setSelectedBusId(e.target.value)}
                       className="w-full"
+                      aria-labelledby="bulk-bus-label"
                     >
                       {buses.map((bus) => (
                         <SelectItem key={bus.id}>
@@ -151,15 +176,20 @@ function AssignTripModal({ isOpen, onClose, trip }: AssignTripModalProps) {
                     </Select>
                   </div>
                   <div>
-                    <label htmlFor="driver-select" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="bulk-driver-select"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                      id="bulk-driver-label"
+                    >
                       Conductor
                     </label>
                     <Select
-                      id="driver-select"
+                      id="bulk-driver-select"
                       placeholder="Seleccionar conductor"
                       selectedKeys={selectedDriverId ? [selectedDriverId] : []}
                       onChange={(e) => setSelectedDriverId(e.target.value)}
                       className="w-full"
+                      aria-labelledby="bulk-driver-label"
                     >
                       {drivers.map((driver) => (
                         <SelectItem key={driver.id}>
@@ -191,4 +221,4 @@ function AssignTripModal({ isOpen, onClose, trip }: AssignTripModalProps) {
   );
 }
 
-export default AssignTripModal;
+export default BulkAssignTripModal;

@@ -80,6 +80,43 @@ tripRouter.get('/bus/:busId', canActivate([UserType.ADMIN]), async (req: Request
   }
 });
 
+// Bulk update trips (admin only) - NEW ENDPOINT
+tripRouter.patch('/bulk', canActivate([UserType.ADMIN]), async (req: ExpressRequest, res: Response) => {
+  try {
+    const { tripIds, updateData } = req.body;
+
+    if (!Array.isArray(tripIds) || tripIds.length === 0) {
+      res.status(400).json({ error: 'La lista de viajes es inválida o vacía' });
+      return;
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
+      return;
+    }
+
+    // Convert updateStatus flag to boolean and remove from updateData
+    const shouldUpdateStatus = updateData.updateStatus === 'true';
+    const cleanedUpdateData = { ...updateData };
+    delete cleanedUpdateData.updateStatus;
+
+    // Update all trips in batch
+    const updatedTrips = await tripService.updateTripsInBulk(
+      tripIds,
+      cleanedUpdateData, 
+      shouldUpdateStatus
+    );
+
+    res.json({
+      message: `${updatedTrips.length} viajes actualizados con éxito`,
+      updatedCount: updatedTrips.length,
+    });
+  } catch (error) {
+    console.error('Error updating trips in bulk:', error);
+    res.status(400).json({ error: error.message || 'Error al actualizar los viajes en lote' });
+  }
+});
+
 // Get trip by ID (admin, driver of the trip, and users with bookings)
 tripRouter.get('/:id', async (req: ExpressRequest, res: Response) => {
   try {

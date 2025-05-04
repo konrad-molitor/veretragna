@@ -97,6 +97,11 @@ export function SchedulesPanel() {
       [DayOfWeek.SATURDAY]: 6,
       [DayOfWeek.SUNDAY]: 0,
     };
+    // Ensure we have a valid mapping
+    if (dayMap[dayOfWeek] === undefined) {
+      console.error('Invalid day of week:', dayOfWeek);
+      return 1; // Default to Monday if invalid
+    }
     return dayMap[dayOfWeek];
   };
 
@@ -172,26 +177,31 @@ export function SchedulesPanel() {
   };
 
   const getCalendarEvents = () => {
-    const events = schedules.map((schedule) => {
+    // First ensure schedules array is valid
+    if (!Array.isArray(schedules) || schedules.length === 0) {
+      console.warn('No schedules available to display in calendar');
+      return [];
+    }
+
+    // Get current date information for creating events
+    const today = new Date();
+    const currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+    currentWeekStart.setHours(0, 0, 0, 0);
+
+    const validSchedules = schedules.filter((schedule) => (
+      schedule && schedule.dayOfWeek && schedule.departureTime && schedule.route
+    ));
+
+    return validSchedules.map((schedule) => {
       const route = routes.find((r) => r.id === schedule.route.id);
       const routeDuration = route ? calculateRouteDuration(route) : 15;
-      const startTime = schedule.departureTime;
       const dayIndex = getDayIndex(schedule.dayOfWeek);
-
-      // Create a real date for the current week
-      const now = new Date();
-      const currentDay = now.getDay(); // 0 - Sunday, 1 - Monday, etc.
-      const diff = dayIndex - currentDay;
-
-      // Get the date for the specified day of the week in the current week
-      const eventDate = new Date(now);
-      eventDate.setDate(now.getDate() + diff);
-
-      // Set event start time
-      const [hours, minutes, seconds] = startTime.split(':').map(Number);
-      eventDate.setHours(hours, minutes, seconds, 0);
-
-      // Calculate end time
+      const dayOffset = dayIndex - 1; // Offset from Monday (0 for Monday, 1 for Tuesday, etc.)
+      const eventDate = new Date(currentWeekStart);
+      eventDate.setDate(currentWeekStart.getDate() + dayOffset);
+      const [hours, minutes, seconds] = schedule.departureTime.split(':').map(Number);
+      eventDate.setHours(hours, minutes, seconds);
       const endDate = new Date(eventDate);
       endDate.setMinutes(endDate.getMinutes() + routeDuration);
 
@@ -210,8 +220,6 @@ export function SchedulesPanel() {
         borderColor: '#2c6db8',
       };
     });
-
-    return events;
   };
 
   const handleEventDrop = async (info: EventDropArg) => {
@@ -549,7 +557,15 @@ export function SchedulesPanel() {
             eventDrop={handleEventDrop}
             eventContent={EventContent}
             eventClick={handleEventClick}
-            datesSet={() => {
+            eventDisplay="block"
+            eventTimeFormat={{
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }}
+            displayEventEnd
+            datesSet={(dateInfo) => {
+              console.log('Calendar date range changed:', dateInfo.startStr, 'to', dateInfo.endStr);
               if (selectedRoute) {
                 fetchSchedulesForRoute(selectedRoute);
               } else {

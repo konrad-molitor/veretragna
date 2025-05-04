@@ -11,16 +11,19 @@ import {
   SelectItem,
   Input,
   Chip,
+  Selection,
 } from '@heroui/react';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
   PencilIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../../app/utils/axiosInstance';
-import CreateTrips, { ScheduleData, DayOfWeek } from './CreateTrips';
+import CreateTrips, { DayOfWeek } from './CreateTrips';
 import AssignTripModal from './AssignTripModal';
+import BulkAssignTripModal from './BulkAssignTripModal';
 
 // Interface definitions
 interface Route {
@@ -90,6 +93,17 @@ export function TripsPanel() {
   // Add state for the assign modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+
+  // Add state for bulk assign modal and selected trips
+  const [isBulkAssignModalOpen, setIsBulkAssignModalOpen] = useState(false);
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
+
+  // Check if trip can be edited (not in progress, completed, or cancelled)
+  const canEditTrip = (status: TripStatus): boolean => ![
+    TripStatus.ONGOING,
+    TripStatus.COMPLETED,
+    TripStatus.CANCELLED,
+  ].includes(status);
 
   // Load data from server
   const fetchTrips = async () => {
@@ -217,6 +231,19 @@ export function TripsPanel() {
     return matchesRoute && matchesStatus && matchesSearch;
   }), [trips, routeFilter, statusFilter, searchQuery]);
 
+  // Get selected trips from the filtered list
+  const selectedTrips = useMemo(() => {
+    if (selectedKeys === 'all') {
+      return filteredTrips.filter((trip) => canEditTrip(trip.status));
+    }
+
+    if (!selectedKeys || !(selectedKeys instanceof Set) || selectedKeys.size === 0) {
+      return [];
+    }
+
+    return filteredTrips.filter((trip) => selectedKeys.has(trip.id));
+  }, [filteredTrips, selectedKeys, canEditTrip]);
+
   // Handler for creating a new trip
   const handleAddTrip = () => {
     setIsCreateTripsOpen(true);
@@ -242,13 +269,27 @@ export function TripsPanel() {
     fetchTrips();
   };
 
-  // Check if trip can be edited (not in progress, completed, or cancelled)
-  const canEditTrip = (status: TripStatus): boolean => {
-    return ![
-      TripStatus.ONGOING, 
-      TripStatus.COMPLETED, 
-      TripStatus.CANCELLED
-    ].includes(status);
+  // Handler for opening the bulk assign modal
+  const handleBulkAssign = () => {
+    if (selectedTrips.length === 0) {
+      toast.error('Por favor, seleccione al menos un viaje');
+      return;
+    }
+    setIsBulkAssignModalOpen(true);
+  };
+
+  // Handler for closing the bulk assign modal
+  const handleCloseBulkAssignModal = () => {
+    setIsBulkAssignModalOpen(false);
+    // Refresh trips after bulk assignment
+    fetchTrips();
+    // Clear selection
+    setSelectedKeys(new Set());
+  };
+
+  // Handler for selection changes
+  const handleSelectionChange = (keys: Selection) => {
+    setSelectedKeys(keys);
   };
 
   // Get total number of seats in the bus
@@ -256,6 +297,13 @@ export function TripsPanel() {
     if (!bus || !bus.totalSeats) return 0;
     return Object.values(bus.totalSeats).reduce((sum, count) => sum + count, 0);
   };
+
+  // Prepare disabled keys for table selection
+  const disabledKeys = useMemo(() => new Set(
+    trips
+      .filter((trip) => !canEditTrip(trip.status))
+      .map((trip) => trip.id),
+  ), [trips]);
 
   // Render table cells
   const renderCell = (trip: Trip, columnKey: string) => {
@@ -314,16 +362,34 @@ export function TripsPanel() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Gestión de Viajes</h1>
-        <Button color="primary" startContent={<PlusIcon className="h-5 w-5" />} onClick={handleAddTrip}>
-          Crear Viajes
-        </Button>
+        <div className="flex gap-2">
+          {selectedTrips.length > 0 && (
+            <Button
+              color="secondary"
+              startContent={<UsersIcon className="h-5 w-5" />}
+              onClick={handleBulkAssign}
+            >
+              Editar
+              {' '}
+              {selectedTrips.length}
+              {' '}
+              seleccionados
+            </Button>
+          )}
+          <Button color="primary" startContent={<PlusIcon className="h-5 w-5" />} onClick={handleAddTrip}>
+            Crear Viajes
+          </Button>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4">
-        {/* Main trips table */}
-        <div className="flex-1 space-y-4">
-          <div className="flex items-center">
-            <div className="relative flex-1">
+      {/* Фильтры - теперь горизонтально над таблицей */}
+      <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="text-sm font-medium mb-2" id="status-filter-label">
+              Buscar viajes
+            </div>
+            <div className="relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
                 placeholder="Buscar viajes..."
@@ -334,41 +400,7 @@ export function TripsPanel() {
             </div>
           </div>
 
-          <Table
-            aria-label="Tabla de viajes"
-            isHeaderSticky
-            selectionMode="single"
-          >
-            <TableHeader>
-              <TableColumn key="route">Ruta</TableColumn>
-              <TableColumn key="departure">Salida</TableColumn>
-              <TableColumn key="arrival">Llegada</TableColumn>
-              <TableColumn key="status">Estado</TableColumn>
-              <TableColumn key="bus">Autobús</TableColumn>
-              <TableColumn key="driver">Conductor</TableColumn>
-              <TableColumn key="actions" className="text-right">Acciones</TableColumn>
-            </TableHeader>
-            <TableBody
-              items={filteredTrips}
-              isLoading={loading}
-              loadingContent="Cargando viajes..."
-              emptyContent={error ? `Error: ${error}` : 'No hay viajes disponibles'}
-            >
-              {(trip) => (
-                <TableRow key={trip.id}>
-                  {(columnKey) => (
-                    <TableCell>{renderCell(trip, columnKey.toString())}</TableCell>
-                  )}
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Filters panel */}
-        <div className="w-full lg:w-72 space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-          <h2 className="text-lg font-semibold text-gray-700">Filtros</h2>
-          <div className="space-y-2">
+          <div className="flex-1 md:max-w-xs">
             <div className="text-sm font-medium mb-2" id="status-filter-label">
               Estado
             </div>
@@ -401,7 +433,7 @@ export function TripsPanel() {
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex-1 md:max-w-xs">
             <div className="text-sm font-medium mb-2" id="route-filter-label">
               Ruta
             </div>
@@ -416,21 +448,57 @@ export function TripsPanel() {
             </Select>
           </div>
 
-          <div className="pt-4">
+          <div className="flex items-end">
             <Button
               color="default"
               variant="flat"
-              className="w-full"
+              className="w-full md:w-auto"
               onClick={() => {
                 setStatusFilter('all');
                 setRouteFilter('all');
                 setSearchQuery('');
               }}
             >
-              Limpiar filtros
+              Limpiar
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Таблица поездок */}
+      <div className="space-y-4">
+        <Table
+          aria-label="Tabla de viajes"
+          isHeaderSticky
+          selectionMode="multiple"
+          selectedKeys={selectedKeys}
+          onSelectionChange={handleSelectionChange}
+          disabledKeys={disabledKeys}
+        >
+          <TableHeader>
+            <TableColumn key="route">Ruta</TableColumn>
+            <TableColumn key="departure">Salida</TableColumn>
+            <TableColumn key="arrival">Llegada</TableColumn>
+            <TableColumn key="status">Estado</TableColumn>
+            <TableColumn key="bus">Autobús</TableColumn>
+            <TableColumn key="driver">Conductor</TableColumn>
+            <TableColumn key="actions" className="text-right">Acciones</TableColumn>
+          </TableHeader>
+          <TableBody
+            items={filteredTrips}
+            isLoading={loading}
+            loadingContent="Cargando viajes..."
+            emptyContent={error ? `Error: ${error}` : 'No hay viajes disponibles'}
+          >
+            {(trip) => (
+              <TableRow key={trip.id}>
+                {(columnKey) => (
+                  <TableCell>{renderCell(trip, columnKey.toString())}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Create trips modal */}
@@ -451,6 +519,13 @@ export function TripsPanel() {
         isOpen={isAssignModalOpen}
         onClose={handleCloseAssignModal}
         trip={selectedTrip}
+      />
+
+      {/* Bulk assign modal */}
+      <BulkAssignTripModal
+        isOpen={isBulkAssignModalOpen}
+        onClose={handleCloseBulkAssignModal}
+        selectedTrips={selectedTrips}
       />
     </div>
   );
