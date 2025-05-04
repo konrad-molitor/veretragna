@@ -48,7 +48,7 @@ export function UserDashboard() {
   const [filteredFromLocations, setFilteredFromLocations] = useState<Location[]>([]);
   const [filteredToLocations, setFilteredToLocations] = useState<Location[]>([]);
 
-  // Новые состояния
+  // New states
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<TripResult[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -87,23 +87,23 @@ export function UserDashboard() {
     e.preventDefault();
 
     if (!fromLocation || !toLocation) {
-      // Можно добавить сообщение об ошибке
+      // Can add error message here
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Устанавливаем флаг поиска для активации анимации
+      // Set search flag to activate animation
       setIsSearching(true);
 
-      // Форматируем дату для API
+      // Format date for API
       const formattedDepartureDate = departureDate.toString();
       const formattedReturnDate = isOneWay ? undefined : returnDate.toString();
 
-      // Эмулация запроса к API (в будущем заменить на реальный запрос)
+      // API request simulation (replace with real API request later)
       setTimeout(() => {
-        // Здесь должен быть реальный запрос к API
+        // Real API call should be here
         // const response = await axiosInstance.get('/trip-search', {
         //   params: {
         //     fromLocationId: fromLocation,
@@ -114,7 +114,7 @@ export function UserDashboard() {
         //   },
         // });
 
-        // Заглушка с фейковыми данными
+        // Mock data with fake results
         const mockResults = [
           {
             id: '1',
@@ -154,7 +154,7 @@ export function UserDashboard() {
 
   return (
     <div className="relative">
-      {/* Hero section with background image - скрывается при поиске */}
+      {/* Hero section with background image - hidden during search */}
       <AnimatePresence>
         {!isSearching && (
           <motion.div
@@ -175,7 +175,7 @@ export function UserDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Search form card - всегда видима, но меняет позицию */}
+      {/* Search form card - always visible, but changes position */}
       <motion.div
         initial={{ marginTop: isSearching ? 0 : '-5rem' }}
         animate={{ marginTop: isSearching ? 0 : '-5rem' }}
@@ -241,13 +241,13 @@ export function UserDashboard() {
                 <div className="col-span-12 md:col-span-2">
                   <I18nProvider locale="es-ES">
                     <DatePicker
-                      // @ts-expect-error - типы из библиотеки несовместимы
+                      // @ts-expect-error - tipos from library are not compatible
                       defaultValue={departureDate}
-                      // @ts-expect-error - типы из библиотеки несовместимы
+                      // @ts-expect-error - tipos from library are not compatible
                       onChange={(date) => date && setDepartureDate(date)}
                       firstDayOfWeek="mon"
                       selectorIcon={<CalendarIcon className="h-5 w-5" />}
-                      // @ts-expect-error - типы из библиотеки несовместимы
+                      // @ts-expect-error - tipos from library are not compatible
                       minValue={today(getLocalTimeZone())}
                       label="Salida"
                     />
@@ -258,13 +258,13 @@ export function UserDashboard() {
                 <div className={`col-span-12 md:col-span-2 ${isOneWay ? 'opacity-50' : ''}`}>
                   <I18nProvider locale="es-ES">
                     <DatePicker
-                      // @ts-expect-error - типы из библиотеки несовместимы
+                      // @ts-expect-error - tipos from library are not compatible
                       defaultValue={returnDate}
-                      // @ts-expect-error - типы из библиотеки несовместимы
+                      // @ts-expect-error - tipos from library are not compatible
                       onChange={(date) => date && setReturnDate(date)}
                       firstDayOfWeek="mon"
                       selectorIcon={<CalendarIcon className="h-5 w-5" />}
-                      // @ts-expect-error - типы из библиотеки несовместимы
+                      // @ts-expect-error - tipos from library are not compatible
                       minValue={departureDate}
                       isDisabled={isOneWay}
                       label="Regreso"
@@ -316,7 +316,7 @@ export function UserDashboard() {
         </Card>
       </motion.div>
 
-      {/* Секция результатов поиска - отображается только после поиска */}
+      {/* Search results section - displayed only after search */}
       <AnimatePresence>
         {isSearching && (
           <motion.div
@@ -327,11 +327,11 @@ export function UserDashboard() {
             className="max-w-6xl mx-auto mt-8 px-4"
           >
             <h2 className="text-2xl font-bold mb-6">Resultados de búsqueda</h2>
-            
+
             {(() => {
               if (isLoading) {
                 return (
-                  // Skeleton loader для результатов
+                  // Skeleton loader for results
                   <div className="space-y-4">
                     {[1, 2, 3].map((item) => (
                       <Card key={item} className="w-full">
@@ -349,11 +349,11 @@ export function UserDashboard() {
                     ))}
                   </div>
                 );
-              } 
-              
+              }
+
               if (searchResults && searchResults.length > 0) {
                 return (
-                  // Результаты поиска
+                  // Search results
                   <div className="space-y-4">
                     {searchResults.map((trip) => (
                       <Card key={trip.id} className="w-full hover:shadow-lg transition-shadow">
@@ -393,8 +393,8 @@ export function UserDashboard() {
                   </div>
                 );
               }
-              
-              // Сообщение об отсутствии результатов
+
+              // No results message
               return (
                 <Card>
                   <CardBody className="text-center py-8">
@@ -408,7 +408,7 @@ export function UserDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Benefits section - отображается только на главной (не при поиске) */}
+      {/* Benefits section - displayed only on home page (not during search) */}
       <AnimatePresence>
         {!isSearching && (
           <motion.div

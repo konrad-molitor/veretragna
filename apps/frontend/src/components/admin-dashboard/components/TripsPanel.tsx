@@ -382,7 +382,7 @@ export function TripsPanel() {
         </div>
       </div>
 
-      {/* Фильтры - теперь горизонтально над таблицей */}
+      {/* Filters - horizontal above the table */}
       <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -465,7 +465,7 @@ export function TripsPanel() {
         </div>
       </div>
 
-      {/* Таблица поездок */}
+      {/* Trips table */}
       <div className="space-y-4">
         <Table
           aria-label="Tabla de viajes"
