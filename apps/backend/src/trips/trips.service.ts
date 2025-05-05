@@ -23,7 +23,7 @@ class TripService {
   async getTripById(id: string): Promise<Trip> {
     const trip = await Trip.findOne({
       where: { id },
-      relations: ['schedule', 'schedule.route', 'bus', 'driver'],
+      relations: ['schedule', 'schedule.route', 'schedule.route.stops', 'schedule.route.stops.location', 'bus', 'driver'],
     });
 
     if (!trip) {

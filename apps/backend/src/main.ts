@@ -15,6 +15,7 @@ import { busRouter } from './buses/bus.controller';
 import { routesRouter } from './routes/routes.controller';
 import { scheduleRouter } from './schedules/schedule.controller';
 import { tripRouter } from './trips/trip.controller';
+import { ticketRouter } from './tickets/ticket.controller';
 import { authenticate } from './common/middlewares/auth.middleware';
 import { locationService } from './locations/locations.service';
 
@@ -54,6 +55,7 @@ const initializeApp = async () => {
     app.use('/api/routes', routesRouter);
     app.use('/api/schedules', scheduleRouter);
     app.use('/api/trips', tripRouter);
+    app.use('/api/tickets', ticketRouter);
 
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
 

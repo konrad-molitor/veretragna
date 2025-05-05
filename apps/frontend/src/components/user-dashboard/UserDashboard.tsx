@@ -9,47 +9,22 @@ import {
   CardBody,
   Skeleton,
   Spinner,
+  Badge,
 } from '@heroui/react';
 import {
   ArrowRightIcon,
   MapPinIcon,
   CalendarIcon,
   ArrowPathIcon,
+  CheckIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 import { I18nProvider } from '@react-aria/i18n';
 import { today, getLocalTimeZone, DateValue } from '@internationalized/date';
 import { motion, AnimatePresence } from 'framer-motion';
 import axiosInstance from '../../app/utils/axiosInstance';
-
-interface Location {
-  id: string;
-  name: string;
-}
-
-interface Segment {
-  tripId: string;
-  depart: { locId: string; time: Date };
-  arrive: { locId: string; time: Date };
-  price: number;
-}
-
-interface TripResult {
-  id: string;
-  departureTime: string;
-  arrivalTime: string;
-  price: number;
-  transfers: number;
-  departureLocation: string | undefined;
-  arrivalLocation: string | undefined;
-}
-
-interface SearchResponse {
-  message: string;
-  result: {
-    outbound: Segment[] | null;
-    inbound: Segment[] | null;
-  };
-}
+import CheckoutModal from './components/CheckoutModal';
+import { Location, Segment, TripRoute, TripResult, SearchResponse, TripDetail } from './types';
 
 export function UserDashboard() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -67,6 +42,18 @@ export function UserDashboard() {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<TripResult[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // New state for storing detailed information about routes
+  const [tripsDetails, setTripsDetails] = useState<Record<string, TripRoute>>({});
+
+  // New state for storing selected trips
+  const [selectedTrips, setSelectedTrips] = useState<string[]>([]);
+
+  // New state for storing trip details
+  const [tripDetails, setTripDetails] = useState<Record<string, TripDetail>>({});
+
+  // State для модального окна оформления покупки
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   // Fetch locations from API
   useEffect(() => {
@@ -98,6 +85,17 @@ export function UserDashboard() {
     }
   }, [searchQuery, locations]);
 
+  // Function to fetch trip details
+  const fetchTripDetails = async (tripId: string) => {
+    try {
+      const response = await axiosInstance.get(`/trips/${tripId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching details for trip ${tripId}:`, error);
+      return null;
+    }
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -126,42 +124,137 @@ export function UserDashboard() {
         searchWindowDays: 30,
       });
 
-      // Преобразование полученных сегментов в формат TripResult
       const results: TripResult[] = [];
+      const details: Record<string, TripRoute> = {};
 
       if (response.data.result.outbound) {
         const { outbound } = response.data.result;
-        const startSegment = outbound[0];
-        const endSegment = outbound[outbound.length - 1];
+        // Первый и последний сегменты маршрута туда
+        const firstSegment = outbound[0];
+        const lastSegment = outbound[outbound.length - 1];
 
-        results.push({
-          id: `outbound-${new Date().getTime()}`,
-          departureTime: new Date(startSegment.depart.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          arrivalTime: new Date(endSegment.arrive.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          price: outbound.reduce((sum, segment) => sum + segment.price, 0),
-          transfers: outbound.length - 1,
-          departureLocation: locations.find((loc) => loc.id === startSegment.depart.locId)?.name,
-          arrivalLocation: locations.find((loc) => loc.id === endSegment.arrive.locId)?.name,
+        // Уникальный идентификатор для маршрута туда
+        const outboundId = `outbound-${new Date().getTime()}`;
+
+        // Рассчитываем общую цену поездки
+        const totalPrice = outbound.reduce((sum, segment) => sum + Number(segment.price), 0);
+
+        // Create promises for fetching details of each segment
+        const tripDetailsPromises = outbound.map((segment) => fetchTripDetails(segment.tripId));
+
+        // Wait for all promises to resolve
+        const tripDetailsResults = await Promise.all(tripDetailsPromises);
+
+        // Create a map of trip IDs to their details
+        const tripDetailsMap: Record<string, TripDetail> = {};
+        tripDetailsResults.forEach((detail) => {
+          if (detail && detail.id) {
+            tripDetailsMap[detail.id] = detail;
+          }
         });
+
+        // Store trip details in state
+        setTripDetails({ ...tripDetails, ...tripDetailsMap });
+
+        // Create segment information with location names from trip details
+        const outboundRoute: TripRoute = {
+          id: outboundId,
+          type: 'outbound',
+          departureTime: new Date(firstSegment.boardTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          arrivalTime: new Date(lastSegment.alightTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          totalPrice,
+          segments: outbound.map((segment) => {
+            const detail = tripDetailsMap[segment.tripId];
+            return {
+              tripId: segment.tripId,
+              from: detail?.departureLocation || locations.find((loc) => loc.id === fromLocation)?.name || 'Unknown',
+              to: detail?.arrivalLocation || locations.find((loc) => loc.id === toLocation)?.name || 'Unknown',
+              departureTime: new Date(segment.boardTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+              arrivalTime: new Date(segment.alightTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+              price: Number(segment.price),
+            };
+          }),
+        };
+
+        // Добавляем в результаты поиска
+        results.push({
+          id: outboundId,
+          departureTime: outboundRoute.departureTime,
+          arrivalTime: outboundRoute.arrivalTime,
+          price: outboundRoute.totalPrice,
+          transfers: outbound.length - 1,
+          departureLocation: locations.find((loc) => loc.id === fromLocation)?.name,
+          arrivalLocation: locations.find((loc) => loc.id === toLocation)?.name,
+        });
+
+        details[outboundId] = outboundRoute;
       }
 
       if (response.data.result.inbound && !isOneWay) {
         const { inbound } = response.data.result;
-        const startSegment = inbound[0];
-        const endSegment = inbound[inbound.length - 1];
+        // Первый и последний сегменты обратного маршрута
+        const firstSegment = inbound[0];
+        const lastSegment = inbound[inbound.length - 1];
 
-        results.push({
-          id: `inbound-${new Date().getTime()}`,
-          departureTime: new Date(startSegment.depart.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          arrivalTime: new Date(endSegment.arrive.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          price: inbound.reduce((sum, segment) => sum + segment.price, 0),
-          transfers: inbound.length - 1,
-          departureLocation: locations.find((loc) => loc.id === startSegment.depart.locId)?.name,
-          arrivalLocation: locations.find((loc) => loc.id === endSegment.arrive.locId)?.name,
+        // Уникальный идентификатор для обратного маршрута
+        const inboundId = `inbound-${new Date().getTime()}`;
+
+        // Рассчитываем общую цену поездки
+        const totalPrice = inbound.reduce((sum, segment) => sum + Number(segment.price), 0);
+
+        // Create promises for fetching details of each segment
+        const tripDetailsPromises = inbound.map((segment) => fetchTripDetails(segment.tripId));
+
+        // Wait for all promises to resolve
+        const tripDetailsResults = await Promise.all(tripDetailsPromises);
+
+        // Add to the map of trip IDs to their details
+        const tripDetailsMap: Record<string, TripDetail> = {};
+        tripDetailsResults.forEach((detail) => {
+          if (detail && detail.id) {
+            tripDetailsMap[detail.id] = detail;
+          }
         });
+
+        // Store trip details in state
+        setTripDetails({ ...tripDetails, ...tripDetailsMap });
+
+        // Create segment information with location names from trip details
+        const inboundRoute: TripRoute = {
+          id: inboundId,
+          type: 'inbound',
+          departureTime: new Date(firstSegment.boardTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          arrivalTime: new Date(lastSegment.alightTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          totalPrice,
+          segments: inbound.map((segment) => {
+            const detail = tripDetailsMap[segment.tripId];
+            return {
+              tripId: segment.tripId,
+              from: detail?.departureLocation || locations.find((loc) => loc.id === toLocation)?.name || 'Unknown',
+              to: detail?.arrivalLocation || locations.find((loc) => loc.id === fromLocation)?.name || 'Unknown',
+              departureTime: new Date(segment.boardTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+              arrivalTime: new Date(segment.alightTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+              price: Number(segment.price),
+            };
+          }),
+        };
+
+        // Добавляем в результаты поиска
+        results.push({
+          id: inboundId,
+          departureTime: inboundRoute.departureTime,
+          arrivalTime: inboundRoute.arrivalTime,
+          price: inboundRoute.totalPrice,
+          transfers: inbound.length - 1,
+          departureLocation: locations.find((loc) => loc.id === toLocation)?.name,
+          arrivalLocation: locations.find((loc) => loc.id === fromLocation)?.name,
+        });
+
+        details[inboundId] = inboundRoute;
       }
 
       setSearchResults(results);
+      setTripsDetails(details);
       setIsLoading(false);
     } catch (error) {
       console.error('Error searching for trips:', error);
@@ -174,6 +267,37 @@ export function UserDashboard() {
     const tempFrom = fromLocation;
     setFromLocation(toLocation);
     setToLocation(tempFrom);
+  };
+
+  // Function to handle trip selection
+  const handleTripSelection = (tripId: string) => {
+    if (selectedTrips.includes(tripId)) {
+      setSelectedTrips(selectedTrips.filter((id) => id !== tripId));
+    } else {
+      setSelectedTrips([...selectedTrips, tripId]);
+    }
+  };
+
+  // Calculate total price of selected trips
+  const getTotalPrice = () => {
+    if (!searchResults) return 0;
+
+    return selectedTrips.reduce((total, tripId) => {
+      const trip = searchResults.find((result) => result.id === tripId);
+      return total + (trip?.price || 0);
+    }, 0);
+  };
+
+  // Открытие модального окна оформления покупки
+  const handleOpenCheckout = () => {
+    if (selectedTrips.length > 0) {
+      setIsCheckoutModalOpen(true);
+    }
+  };
+
+  // Закрытие модального окна оформления покупки
+  const handleCloseCheckout = () => {
+    setIsCheckoutModalOpen(false);
   };
 
   return (
@@ -382,7 +506,7 @@ export function UserDashboard() {
                     {searchResults.map((trip) => (
                       <Card key={trip.id} className="w-full hover:shadow-lg transition-shadow">
                         <CardBody>
-                          <div className="flex flex-col md:flex-row justify-between items-center">
+                          <div className="flex flex-col md:flex-row justify-between items-center mb-2">
                             <div>
                               <p className="text-lg font-semibold">
                                 {trip.departureLocation}
@@ -395,25 +519,122 @@ export function UserDashboard() {
                                 {trip.departureTime}
                                 {' '}
                                 -
+                                {' '}
                                 {trip.arrivalTime}
                                 {' '}
                                 •
+                                {' '}
                                 {trip.transfers === 0 ? 'Directo' : `${trip.transfers} transbordo(s)`}
                               </p>
                             </div>
                             <div className="flex flex-col items-end mt-4 md:mt-0">
                               <p className="text-xl font-bold text-red-600">
                                 $
-                                {trip.price.toLocaleString()}
+                                {trip.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </p>
-                              <Button color="primary" className="mt-2" size="sm" style={{ backgroundColor: 'rgb(255, 0, 22)' }}>
-                                Seleccionar
+                              <Button
+                                color={selectedTrips.includes(trip.id) ? 'success' : 'primary'}
+                                className="mt-2"
+                                size="sm"
+                                style={selectedTrips.includes(trip.id) ? { backgroundColor: 'rgb(34, 197, 94)' } : { backgroundColor: 'rgb(255, 0, 22)' }}
+                                startContent={selectedTrips.includes(trip.id) ? <CheckIcon className="h-4 w-4" /> : null}
+                                onClick={() => handleTripSelection(trip.id)}
+                              >
+                                {selectedTrips.includes(trip.id) ? 'Seleccionado' : 'Seleccionar'}
                               </Button>
                             </div>
                           </div>
+
+                          {/* Детали маршрута с пересадками */}
+                          {tripsDetails[trip.id] && tripsDetails[trip.id].segments.length > 0 && (
+                            <div className="border-t pt-3 mt-3">
+                              <p className="text-sm font-semibold mb-2">
+                                {tripsDetails[trip.id].type === 'outbound' ? 'Detalles de la ida:' : 'Detalles de la vuelta:'}
+                              </p>
+                              <div className="space-y-2">
+                                {tripsDetails[trip.id].segments.map((segment, idx) => (
+                                  <div key={`${segment.tripId}-${idx}`} className="bg-gray-50 p-2 rounded">
+                                    <div className="flex justify-between">
+                                      <div>
+                                        <p className="font-medium">
+                                          {segment.from}
+                                          {' '}
+                                          →
+                                          {segment.to}
+                                        </p>
+                                        <p className="text-xs text-gray-600">
+                                          {segment.departureTime}
+                                          {' '}
+                                          -
+                                          {segment.arrivalTime}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                          ID de viaje:
+                                          {' '}
+                                          {segment.tripId.substring(0, 8)}
+                                          ...
+                                        </p>
+                                      </div>
+                                      <div className="text-sm font-semibold">
+                                        $
+                                        {segment.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </div>
+                                    </div>
+                                    {idx < tripsDetails[trip.id].segments.length - 1 && (
+                                      <div className="flex justify-center my-1">
+                                        <div className="border border-dashed border-gray-300 w-1/2" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </CardBody>
                       </Card>
                     ))}
+
+                    {/* Purchase button - displayed only when trips are selected */}
+                    {selectedTrips.length > 0 && (
+                      <div className="sticky bottom-4 flex justify-center mt-6">
+                        <Button
+                          size="lg"
+                          color="success"
+                          className="shadow-lg font-bold py-3 px-8"
+                          startContent={(
+                            <motion.div
+                              initial={{ scale: 1 }}
+                              animate={{
+                                scale: [1, 1.2, 1],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                repeatType: 'loop',
+                              }}
+                            >
+                              <ShoppingCartIcon className="h-5 w-5" />
+                            </motion.div>
+                          )}
+                          style={{
+                            backgroundColor: 'rgb(20, 83, 45)',
+                            color: 'white',
+                            fontWeight: 'bold',
+                          }}
+                          onClick={handleOpenCheckout}
+                        >
+                          Comprar
+                          {' '}
+                          {selectedTrips.length}
+                          {' '}
+                          {selectedTrips.length === 1 ? 'billete' : 'billetes'}
+                          {' '}
+                          ($
+                          {getTotalPrice().toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          )
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               }
@@ -474,6 +695,16 @@ export function UserDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Модальное окно оформления покупки */}
+      <CheckoutModal
+        isOpen={isCheckoutModalOpen}
+        onClose={handleCloseCheckout}
+        selectedTrips={selectedTrips}
+        tripsDetails={tripsDetails}
+        tripResults={searchResults || []}
+        getTotalPrice={getTotalPrice}
+      />
     </div>
   );
 }

@@ -31,4 +31,4 @@ export class SearchTripsDto {
   @Min(1)
   @Transform(({ value }) => (typeof value === 'string' ? parseInt(value, 10) : value))
     searchWindowDays?: number = 30;
-} 
+}
