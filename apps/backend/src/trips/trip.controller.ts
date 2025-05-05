@@ -258,7 +258,7 @@ tripRouter.post('/search', async (req: Request, res: Response) => {
       toLocationId,
       new Date(departureDate),
       new Date(returnDate),
-      minTransferMinutes * 60 * 1000, // конвертация в миллисекунды
+      minTransferMinutes * 60 * 1000, // convert to milliseconds
       searchWindowDays,
     );
 

@@ -28,45 +28,7 @@ interface Leg {
     price: number;
 }
 
-// Вспомогательный класс для приоритетной очеред
-
 export class TripsSearchService {
-  // Функция для материализации рейсов на основе расписания
-//   async materialiseTrips(rangeStart: Date, rangeEnd: Date): Promise<Trip[]> {
-//     const schedules = await Schedule.find({
-//       where: { isActive: true },
-//       relations: ['route', 'route.stops', 'route.stops.location'],
-//     });
-
-  //     const materializedTrips: Trip[] = [];
-
-  //     for (const sched of schedules) {
-  //       let date = this.startOfWeekday(rangeStart, sched.dayOfWeek);
-  //       while (date <= rangeEnd) {
-  //         const [hours, minutes, seconds] = sched.departureTime.split(':').map(Number);
-  //         const departure = new Date(date);
-  //         departure.setHours(hours, minutes, seconds);
-
-  //         const routeDuration = Math.max(
-  //           ...sched.route.stops.map((s) => s.timeOffsetMinutesArrival + s.stopDurationMinutes),
-  //         );
-
-  //         const arrival = addMinutes(departure, routeDuration);
-
-  //         const trip = Trip.create({
-  //           schedule: sched,
-  //           scheduleId: sched.id,
-  //           departureDateTime: departure,
-  //           arrivalDateTime: arrival,
-  //         });
-
-  //         materializedTrips.push(trip);
-  //         date = addDays(date, 7); // следующий тот же день недели
-  //       }
-  //     }
-
-  // return materializedTrips;
-  //   }
   private async loadTrips(rangeStart: Date, rangeEnd: Date): Promise<Trip[]> {
     return Trip.find({
       where: {
@@ -82,7 +44,7 @@ export class TripsSearchService {
     });
   }
 
-  //   Вспомогательная функция для определения начала дня недели
+  //   Helper function for determining the start of the day of week
   private startOfWeekday(date: Date, dayOfWeek: string): Date {
     const currentDay = date.getDay();
     let targetDay: number;
@@ -102,7 +64,7 @@ export class TripsSearchService {
     return diff === 0 ? date : addDays(date, diff);
   }
 
-  // Функция для преобразования рейса в сегменты
+  // Function for converting a trip to segments
   private buildSegments(trip: Trip): Segment[] {
     const segs: Segment[] = [];
     const stops = [...trip.schedule.route.stops]
@@ -113,7 +75,7 @@ export class TripsSearchService {
       const B = stops[i + 1];
 
       const base = Number(B.price) || 0;
-      const withBoard = i === 0 // первый сегмент Trip‑а
+      const withBoard = i === 0 // first segment of the trip
         ? base + Number(trip.schedule.route.boardingPrice || 0)
         : base;
       segs.push({
@@ -130,7 +92,7 @@ export class TripsSearchService {
     return segs;
   }
 
-  // Функция для создания индекса сегментов
+  // Function for creating segment index
   createSegmentIndex(allSegments: Segment[]): Map<string, Segment[]> {
     const segmentIndex = new Map<string, Segment[]>();
 
@@ -148,7 +110,7 @@ export class TripsSearchService {
     return segmentIndex;
   }
 
-  // Функция для двоичного поиска - находит индекс первого элемента >= target
+  // Binary search function - finds the index of the first element >= target
   private lowerBound(arr: Segment[], targetTime: number): number {
     let left = 0;
     let right = arr.length;
@@ -173,7 +135,7 @@ export class TripsSearchService {
     tripMeta: Map<string, { capacity: number; booked: number }>,
     minTransferMs = 5 * 60_000,
   ): Promise<Leg[] | null> {
-    /* --- внутренние типы для поиска --- */
+    /* --- internal types for search --- */
     interface Node { locId: string; time: Date; tripId?: string }
 
     const INF = new Date(8640000000000000);
@@ -184,7 +146,7 @@ export class TripsSearchService {
     best.set(fromId, earliest);
     pq.push({ locId: fromId, time: earliest });
 
-    /* ---------- поиск ---------- */
+    /* ---------- search ---------- */
     while (pq.length) {
       const { locId, time, tripId: arrivedVia } = pq.pop()!;
       if (+time !== +(best.get(locId) ?? INF)) continue;
@@ -211,7 +173,7 @@ export class TripsSearchService {
 
     if (!best.has(toId)) return null;
 
-    /* ---------- восстановление Segment‑ов ---------- */
+    /* ---------- segment recovery ---------- */
     const chain: Segment[] = [];
     for (let cur = toId; cur !== fromId;) {
       const p = prev.get(cur);
@@ -260,12 +222,10 @@ export class TripsSearchService {
     const rangeStart = startOfDay(dateStart);
     const rangeEnd = endOfDay(addDays(dateReturn, searchWindowDays));
 
-    /* Trip‑ы берём из БД */
+    /* Get trips from DB */
     const trips = await this.loadTrips(rangeStart, rangeEnd);
-    console.log('trips', trips.length);
-    console.log('firts trip', JSON.stringify(trips[0], null, 2));
 
-    /* Сегменты + индекс + мета */
+    /* Segments + index + meta */
     const allSegments: Segment[] = [];
     const tripMeta = new Map<string, { capacity: number; booked: number }>();
 
@@ -274,14 +234,13 @@ export class TripsSearchService {
       tripMeta.set(t.id, { capacity: t.capacity || Number.MAX_SAFE_INTEGER, booked: t.bookedSeats || 0 });
     }
     const segmentIndex = this.createSegmentIndex(allSegments);
-    console.log('Segments from', fromId, '→', segmentIndex.get(fromId)?.length);
-    console.log('Segments toward', toId, '(arrive) …', segmentIndex.get(toId)?.length);
+    
     if (!segmentIndex.has(fromId)) {
-      console.warn('Из точки отправления вообще нет сегментов; '
-                 + 'проверь buildSegments() и departLocId');
+      console.warn('No segments from departure point; '
+                 + 'check buildSegments() and departLocId');
     }
 
-    /* Поиск туда */
+    /* Outbound search */
     const outbound = await this.findPath(
       fromId,
       toId,
@@ -294,7 +253,7 @@ export class TripsSearchService {
     const arriveOutbound = outbound.at(-1)!.alightTime;
     const earliestReturn = new Date(Math.max(+dateReturn, +addHours(arriveOutbound, 1)));
 
-    /* Поиск обратно */
+    /* Return search */
     const inbound = await this.findPath(
       toId,
       fromId,
@@ -308,5 +267,5 @@ export class TripsSearchService {
   }
 }
 
-// Экспортируем инстанцию сервиса
+// Export service instance
 export const tripsSearchService = new TripsSearchService();

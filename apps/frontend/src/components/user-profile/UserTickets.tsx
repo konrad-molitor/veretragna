@@ -15,7 +15,7 @@ import {
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../app/utils/axiosInstance';
 
-// Интерфейс для билета
+// Ticket interface
 interface Ticket {
   id: string;
   tripId: string;
@@ -48,11 +48,10 @@ export function UserTickets() {
     const fetchUserTickets = async () => {
       try {
         const response = await axiosInstance.get('/tickets/user/me');
-        console.log('response', response.data);
         setTickets(response.data);
       } catch (error) {
-        console.error('Ошибка при загрузке билетов:', error);
-        toast.error('Ошибка при загрузке билетов');
+        console.error('Error loading tickets:', error);
+        toast.error('Error loading tickets');
       } finally {
         setIsLoading(false);
       }
@@ -61,7 +60,7 @@ export function UserTickets() {
     fetchUserTickets();
   }, []);
 
-  // Функция для форматирования даты
+  // Function for date formatting
   const formatDate = (dateString: string) => {
     if (!dateString) {
       return '';
@@ -77,7 +76,7 @@ export function UserTickets() {
     }).format(date);
   };
 
-  // Получение статуса билета на испанском
+  // Get ticket status in Spanish
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'paid': return 'Pagado';
@@ -88,7 +87,7 @@ export function UserTickets() {
     }
   };
 
-  // Получение цвета для статуса
+  // Get color for status
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid': return 'success';

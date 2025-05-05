@@ -565,7 +565,6 @@ export function SchedulesPanel() {
             }}
             displayEventEnd
             datesSet={(dateInfo) => {
-              console.log('Calendar date range changed:', dateInfo.startStr, 'to', dateInfo.endStr);
               if (selectedRoute) {
                 fetchSchedulesForRoute(selectedRoute);
               } else {

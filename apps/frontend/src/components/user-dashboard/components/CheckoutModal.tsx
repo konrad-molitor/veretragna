@@ -186,31 +186,24 @@ export function CheckoutModal({
                 stop.location.name === arrivalLocationName
             );
             
-            console.log('Поездка:', tripId);
-            console.log('От:', departureLocationName, 'До:', arrivalLocationName);
-            console.log('startRouteStop:', startRouteStop?.location?.name);
-            console.log('endRouteStop:', endRouteStop?.location?.name);
-            
-            // Если не найдены остановки, ищем альтернативы
+            // If stops not found, look for alternatives
             if (!startRouteStop || !endRouteStop) {
-              console.error(`Не найдены остановки для сегмента ${departureLocationName} -> ${arrivalLocationName}`);
+              console.error(`Stops not found for segment ${departureLocationName} -> ${arrivalLocationName}`);
               
               let useStartStop = startRouteStop;
               let useEndStop = endRouteStop;
               
-              // Если не найдена начальная остановка, используем первую остановку маршрута
+              // If starting stop not found, use the first stop on the route
               if (!useStartStop && routeStops.length > 0) {
                 useStartStop = routeStops[0];
-                console.log('Используем первую остановку маршрута вместо начальной:', useStartStop.location.name);
               }
               
-              // Если не найдена конечная остановка, используем последнюю остановку маршрута
+              // If ending stop not found, use the last stop on the route
               if (!useEndStop && routeStops.length > 0) {
                 useEndStop = routeStops[routeStops.length - 1];
-                console.log('Используем последнюю остановку маршрута вместо конечной:', useEndStop.location.name);
               }
               
-              // Если у нас есть обе остановки, создаем билет
+              // If we have both stops, create a ticket
               if (useStartStop && useEndStop) {
                 const segmentPromise = axiosInstance.post('/tickets', {
                   tripId,
@@ -223,13 +216,13 @@ export function CheckoutModal({
                 continue;
               }
               
-              // Если всё равно не можем создать билет, выбрасываем ошибку
+              // If we still can't create a ticket, throw an error
               throw new Error(
                 `No se pudieron encontrar las paradas de ruta para las ubicaciones ${departureLocationName} y ${arrivalLocationName}`
               );
             }
             
-            // Создаем билет через API с найденными остановками
+            // Create a ticket through API with the found stops
             const segmentPromise = axiosInstance.post('/tickets', {
               tripId,
               userId: userData.id,
@@ -246,7 +239,7 @@ export function CheckoutModal({
         }
       }
       
-      // Ждем завершения создания всех билетов
+      // Wait for all tickets to be created
       await Promise.all(ticketCreationPromises);
       
       return true;
@@ -255,7 +248,7 @@ export function CheckoutModal({
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);
       } else if (err.response && err.response.data && err.response.data.errors) {
-        // Отображаем ошибки валидации
+        // Display validation errors
         const validationErrors = err.response.data.errors;
         setError(`Error de validación: ${JSON.stringify(validationErrors[0]?.constraints)}`);
       } else {
