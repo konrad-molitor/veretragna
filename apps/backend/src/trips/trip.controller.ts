@@ -8,6 +8,8 @@ import { canActivate } from '../common/middlewares/auth.middleware';
 import { UserType } from '../users/user.entity';
 import { ExpressRequest } from '../common/types/request';
 import { TripStatus } from './trip.entity';
+import { tripsSearchService } from './trips-search.service';
+import { SearchTripsDto } from './dto/search-trips.dto';
 
 const tripRouter = Router();
 
@@ -77,6 +79,43 @@ tripRouter.get('/bus/:busId', canActivate([UserType.ADMIN]), async (req: Request
   } catch (error) {
     console.error('Error getting trips by bus:', error);
     res.status(500).json({ error: error.message || 'Error al obtener la lista de viajes por autobús' });
+  }
+});
+
+// Bulk update trips (admin only) - NEW ENDPOINT
+tripRouter.patch('/bulk', canActivate([UserType.ADMIN]), async (req: ExpressRequest, res: Response) => {
+  try {
+    const { tripIds, updateData } = req.body;
+
+    if (!Array.isArray(tripIds) || tripIds.length === 0) {
+      res.status(400).json({ error: 'La lista de viajes es inválida o vacía' });
+      return;
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
+      return;
+    }
+
+    // Convert updateStatus flag to boolean and remove from updateData
+    const shouldUpdateStatus = updateData.updateStatus === 'true';
+    const cleanedUpdateData = { ...updateData };
+    delete cleanedUpdateData.updateStatus;
+
+    // Update all trips in batch
+    const updatedTrips = await tripService.updateTripsInBulk(
+      tripIds,
+      cleanedUpdateData,
+      shouldUpdateStatus,
+    );
+
+    res.json({
+      message: `${updatedTrips.length} viajes actualizados con éxito`,
+      updatedCount: updatedTrips.length,
+    });
+  } catch (error) {
+    console.error('Error updating trips in bulk:', error);
+    res.status(400).json({ error: error.message || 'Error al actualizar los viajes en lote' });
   }
 });
 
@@ -191,6 +230,61 @@ tripRouter.post('/batch', canActivate([UserType.ADMIN]), async (req: ExpressRequ
   } catch (error) {
     console.error('Error in batch trip creation:', error);
     res.status(400).json({ error: error.message || 'Error al crear los viajes en lote' });
+  }
+});
+
+// Search for trips with connections between locations
+tripRouter.post('/search', async (req: Request, res: Response) => {
+  try {
+    const searchTripsDto = plainToClass(SearchTripsDto, req.body);
+    const errors = await validate(searchTripsDto);
+
+    if (errors.length > 0) {
+      res.status(400).json({ errors });
+      return;
+    }
+
+    const {
+      fromLocationId,
+      toLocationId,
+      departureDate,
+      returnDate,
+      minTransferMinutes = 5,
+      searchWindowDays = 30,
+    } = searchTripsDto;
+
+    const result = await tripsSearchService.findRoundTrip(
+      fromLocationId,
+      toLocationId,
+      new Date(departureDate),
+      new Date(returnDate),
+      minTransferMinutes * 60 * 1000, // convert to milliseconds
+      searchWindowDays,
+    );
+
+    if (!result.outbound) {
+      res.status(404).json({
+        error: 'No se encontraron viajes disponibles para la ruta de ida',
+      });
+      return;
+    }
+
+    if (!result.inbound) {
+      res.status(404).json({
+        error: 'No se encontraron viajes disponibles para la ruta de vuelta',
+      });
+      return;
+    }
+
+    res.json({
+      message: 'Búsqueda completada con éxito',
+      result,
+    });
+  } catch (error) {
+    console.error('Error searching for trips:', error);
+    res.status(500).json({
+      error: error.message || 'Error en la búsqueda de viajes',
+    });
   }
 });
 

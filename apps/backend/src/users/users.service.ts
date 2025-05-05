@@ -147,7 +147,6 @@ class UserService {
     if (isAdminEmail && user.type !== UserType.ADMIN) {
       user.type = UserType.ADMIN;
       await user.save();
-      console.log(`Usuario ${email} ha sido ascendido a administrador.`);
     }
 
     // Create JWT token

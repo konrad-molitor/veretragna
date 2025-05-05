@@ -8,6 +8,7 @@ import { Route } from '../routes/route.entity';
 import { RouteStop } from '../routes/route-stop.entity';
 import { Schedule } from '../schedules/schedule.entity';
 import { Trip } from '../trips/trip.entity';
+import { Ticket } from '../tickets/ticket.entity';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -18,7 +19,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'veretragna',
-  entities: [ApiVersion, User, Location, Bus, Route, RouteStop, Schedule, Trip],
+  entities: [ApiVersion, User, Location, Bus, Route, RouteStop, Schedule, Trip, Ticket],
   synchronize: true, // Should be false in production
   logging: process.env.NODE_ENV !== 'production',
 };

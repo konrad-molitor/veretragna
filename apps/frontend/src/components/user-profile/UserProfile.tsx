@@ -13,6 +13,7 @@ import {
 import { ArrowLeftCircleIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../app/utils/axiosInstance';
+import UserTickets from './UserTickets';
 
 type UserProfileProps = {
   userId?: string;
@@ -129,7 +130,7 @@ export function UserProfile({ userId }: UserProfileProps) {
   };
 
   return (
-    <div className="flex justify-center items-center h-[calc(100vh-120px)] overflow-y-auto py-4 px-6">
+    <div className="flex flex-col justify-center items-center py-4 px-6 overflow-y-auto">
       <div className="w-full max-w-xl">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Perfil de Usuario</h1>
 
@@ -216,6 +217,8 @@ export function UserProfile({ userId }: UserProfileProps) {
             </Button>
           </CardFooter>
         </Card>
+
+        <UserTickets />
       </div>
     </div>
   );
