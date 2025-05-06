@@ -122,6 +122,7 @@ export function UserDashboard() {
         returnDate: formattedReturnDate,
         minTransferMinutes: 5,
         searchWindowDays: 30,
+        returnTrip: !isOneWay,
       });
 
       const results: TripResult[] = [];

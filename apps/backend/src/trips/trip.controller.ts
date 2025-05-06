@@ -251,6 +251,7 @@ tripRouter.post('/search', async (req: Request, res: Response) => {
       returnDate,
       minTransferMinutes = 5,
       searchWindowDays = 30,
+      returnTrip = false,
     } = searchTripsDto;
 
     const result = await tripsSearchService.findRoundTrip(
@@ -269,7 +270,7 @@ tripRouter.post('/search', async (req: Request, res: Response) => {
       return;
     }
 
-    if (!result.inbound) {
+    if (!result.inbound && returnTrip) {
       res.status(404).json({
         error: 'No se encontraron viajes disponibles para la ruta de vuelta',
       });
