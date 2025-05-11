@@ -26,6 +26,7 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import axiosInstance from '../../../app/utils/axiosInstance';
+import { BusLicensePlateInput } from './BusLicensePlateInput';
 
 interface Bus {
   id: string;
@@ -74,6 +75,24 @@ export function BusesPanel() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['microbus', 'omnibus', 'minibus']));
+
+  const handleInputChange = (field: keyof BusFormData, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSeatsChange = (type: 'regular' | 'comfort', value: string) => {
+    const seatsCount = parseInt(value, 10) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      totalSeats: {
+        ...prev.totalSeats,
+        [type]: seatsCount,
+      },
+    }));
+  };
 
   const fetchBuses = async () => {
     try {
@@ -157,35 +176,21 @@ export function BusesPanel() {
     setIsModalOpen(false);
   };
 
-  const handleInputChange = (field: keyof BusFormData, value: string | number) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSeatsChange = (type: 'regular' | 'comfort', value: string) => {
-    const seatsCount = parseInt(value, 10) || 0;
-    setFormData((prev) => ({
-      ...prev,
-      totalSeats: {
-        ...prev.totalSeats,
-        [type]: seatsCount,
-      },
-    }));
-  };
-
   const handleSubmit = async () => {
     try {
+      const submitData = {
+        ...formData,
+      };
+
       if (isEditing && currentBusId) {
         // Update existing bus
-        await axiosInstance.patch(`/buses/${currentBusId}`, formData);
+        await axiosInstance.patch(`/buses/${currentBusId}`, submitData);
 
         // Refresh buses list
         await fetchBuses();
       } else {
         // Create new bus
-        await axiosInstance.post('/buses', formData);
+        await axiosInstance.post('/buses', submitData);
 
         // Refresh buses list
         await fetchBuses();
@@ -353,12 +358,13 @@ export function BusesPanel() {
           </ModalHeader>
           <ModalBody>
             <div className="flex flex-col gap-4">
-              <Input
-                label="Matrícula"
-                value={formData.licensePlate}
-                onChange={(e) => handleInputChange('licensePlate', e.target.value)}
-                required
-              />
+              <div className="flex flex-col gap-2">
+                <BusLicensePlateInput
+                  value={formData.licensePlate}
+                  onChange={(value) => handleInputChange('licensePlate', value)}
+                />
+              </div>
+
               <Input
                 label="Modelo"
                 value={formData.model}
