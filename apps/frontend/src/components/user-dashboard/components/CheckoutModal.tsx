@@ -133,27 +133,27 @@ export function CheckoutModal({
       if (!userStr) {
         throw new Error('Usuario no autenticado');
       }
-      
+
       const userData = JSON.parse(userStr);
 
-      // Создаем билеты для каждого сегмента каждой поездки
+      // Create tickets for each segment of each trip
       const ticketCreationPromises = [];
-      
+
       for (const trip of selectedTripDetails) {
         if (trip.segments.length === 0) {
           throw new Error(`No se encontraron segmentos para el viaje ${trip.id}`);
         }
-        
-        // Для каждого сегмента поездки создаем отдельный билет
+
+        // Create a separate ticket for each trip segment
         for (const segment of trip.segments) {
           try {
-            // Запрашиваем данные о поездке для текущего сегмента
+            // Get trip data for the current segment
             const { tripId } = segment;
-            
-            // Запрашиваем данные о поездке и её маршрутных остановках
+
+            // Request trip data and its route stops
             const tripResponse = await axiosInstance.get(`/trips/${tripId}`);
             const tripData = tripResponse.data;
-            
+
             if (
               !tripData
               || !tripData.schedule
@@ -162,47 +162,45 @@ export function CheckoutModal({
             ) {
               throw new Error(`No se pudo obtener información detallada del viaje ${tripId}`);
             }
-            
-            // Получаем название локаций отправления и прибытия для текущего сегмента
+
+            // Get departure and arrival location names for the current segment
             const departureLocationName = segment.from;
             const arrivalLocationName = segment.to;
-            
-            // Находим соответствующие остановки маршрута
+
+            // Find corresponding route stops
             const routeStops = tripData.schedule.route.stops;
-            
-            // Сортируем остановки по порядку следования
+
+            // Sort stops by sequence order
             routeStops.sort((
               a: { sequenceOrder: number; },
               b: { sequenceOrder: number; },
             ) => a.sequenceOrder - b.sequenceOrder);
-            
+
             const startRouteStop = routeStops.find(
-              (stop: { location: { name: string; }; }) => 
-                stop.location.name === departureLocationName
+              (stop: { location: { name: string; }; }) => stop.location.name === departureLocationName,
             );
-            
+
             const endRouteStop = routeStops.find(
-              (stop: { location: { name: string; }; }) => 
-                stop.location.name === arrivalLocationName
+              (stop: { location: { name: string; }; }) => stop.location.name === arrivalLocationName,
             );
-            
+
             // If stops not found, look for alternatives
             if (!startRouteStop || !endRouteStop) {
               console.error(`Stops not found for segment ${departureLocationName} -> ${arrivalLocationName}`);
-              
+
               let useStartStop = startRouteStop;
               let useEndStop = endRouteStop;
-              
+
               // If starting stop not found, use the first stop on the route
               if (!useStartStop && routeStops.length > 0) {
                 useStartStop = routeStops[0];
               }
-              
+
               // If ending stop not found, use the last stop on the route
               if (!useEndStop && routeStops.length > 0) {
                 useEndStop = routeStops[routeStops.length - 1];
               }
-              
+
               // If we have both stops, create a ticket
               if (useStartStop && useEndStop) {
                 const segmentPromise = axiosInstance.post('/tickets', {
@@ -215,13 +213,13 @@ export function CheckoutModal({
                 ticketCreationPromises.push(segmentPromise);
                 continue;
               }
-              
+
               // If we still can't create a ticket, throw an error
               throw new Error(
-                `No se pudieron encontrar las paradas de ruta para las ubicaciones ${departureLocationName} y ${arrivalLocationName}`
+                `No se pudieron encontrar las paradas de ruta para las ubicaciones ${departureLocationName} y ${arrivalLocationName}`,
               );
             }
-            
+
             // Create a ticket through API with the found stops
             const segmentPromise = axiosInstance.post('/tickets', {
               tripId,
@@ -230,7 +228,7 @@ export function CheckoutModal({
               endRouteStopId: endRouteStop.id,
               price: segment.price,
             });
-            
+
             ticketCreationPromises.push(segmentPromise);
           } catch (segmentErr) {
             console.error('Error al procesar el segmento:', segmentErr);
@@ -238,10 +236,10 @@ export function CheckoutModal({
           }
         }
       }
-      
+
       // Wait for all tickets to be created
       await Promise.all(ticketCreationPromises);
-      
+
       return true;
     } catch (err: any) {
       console.error('Error creating tickets:', err);

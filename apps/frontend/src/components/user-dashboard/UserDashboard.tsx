@@ -9,7 +9,6 @@ import {
   CardBody,
   Skeleton,
   Spinner,
-  Badge,
 } from '@heroui/react';
 import {
   ArrowRightIcon,
@@ -24,7 +23,9 @@ import { today, getLocalTimeZone, DateValue } from '@internationalized/date';
 import { motion, AnimatePresence } from 'framer-motion';
 import axiosInstance from '../../app/utils/axiosInstance';
 import CheckoutModal from './components/CheckoutModal';
-import { Location, Segment, TripRoute, TripResult, SearchResponse, TripDetail } from './types';
+import {
+  Location, TripRoute, TripResult, SearchResponse, TripDetail,
+} from './types';
 
 export function UserDashboard() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -38,21 +39,16 @@ export function UserDashboard() {
   const [filteredFromLocations, setFilteredFromLocations] = useState<Location[]>([]);
   const [filteredToLocations, setFilteredToLocations] = useState<Location[]>([]);
 
-  // New states
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<TripResult[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // New state for storing detailed information about routes
   const [tripsDetails, setTripsDetails] = useState<Record<string, TripRoute>>({});
 
-  // New state for storing selected trips
   const [selectedTrips, setSelectedTrips] = useState<string[]>([]);
 
-  // New state for storing trip details
   const [tripDetails, setTripDetails] = useState<Record<string, TripDetail>>({});
 
-  // State для модального окна оформления покупки
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   // Fetch locations from API
@@ -100,21 +96,17 @@ export function UserDashboard() {
     e.preventDefault();
 
     if (!fromLocation || !toLocation) {
-      // Can add error message here
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Set search flag to activate animation
       setIsSearching(true);
 
-      // Format date for API
       const formattedDepartureDate = departureDate.toString();
-      const formattedReturnDate = isOneWay ? formattedDepartureDate : returnDate.toString();
+      const formattedReturnDate = returnDate.toString();
 
-      // Реальный API запрос к нашему новому роуту
       const response = await axiosInstance.post<SearchResponse>('/trips/search', {
         fromLocationId: fromLocation,
         toLocationId: toLocation,
@@ -122,7 +114,7 @@ export function UserDashboard() {
         returnDate: formattedReturnDate,
         minTransferMinutes: 5,
         searchWindowDays: 30,
-        returnTrip: !isOneWay,
+        returnTrip: true,
       });
 
       const results: TripResult[] = [];
@@ -130,14 +122,14 @@ export function UserDashboard() {
 
       if (response.data.result.outbound) {
         const { outbound } = response.data.result;
-        // Первый и последний сегменты маршрута туда
+        // First and last segments of the outbound route
         const firstSegment = outbound[0];
         const lastSegment = outbound[outbound.length - 1];
 
-        // Уникальный идентификатор для маршрута туда
+        // Unique identifier for the outbound route
         const outboundId = `outbound-${new Date().getTime()}`;
 
-        // Рассчитываем общую цену поездки
+        // Calculate the total trip price
         const totalPrice = outbound.reduce((sum, segment) => sum + Number(segment.price), 0);
 
         // Create promises for fetching details of each segment
@@ -177,7 +169,6 @@ export function UserDashboard() {
           }),
         };
 
-        // Добавляем в результаты поиска
         results.push({
           id: outboundId,
           departureTime: outboundRoute.departureTime,
@@ -193,23 +184,17 @@ export function UserDashboard() {
 
       if (response.data.result.inbound && !isOneWay) {
         const { inbound } = response.data.result;
-        // Первый и последний сегменты обратного маршрута
         const firstSegment = inbound[0];
         const lastSegment = inbound[inbound.length - 1];
 
-        // Уникальный идентификатор для обратного маршрута
         const inboundId = `inbound-${new Date().getTime()}`;
 
-        // Рассчитываем общую цену поездки
         const totalPrice = inbound.reduce((sum, segment) => sum + Number(segment.price), 0);
 
-        // Create promises for fetching details of each segment
         const tripDetailsPromises = inbound.map((segment) => fetchTripDetails(segment.tripId));
 
-        // Wait for all promises to resolve
         const tripDetailsResults = await Promise.all(tripDetailsPromises);
 
-        // Add to the map of trip IDs to their details
         const tripDetailsMap: Record<string, TripDetail> = {};
         tripDetailsResults.forEach((detail) => {
           if (detail && detail.id) {
@@ -217,10 +202,8 @@ export function UserDashboard() {
           }
         });
 
-        // Store trip details in state
         setTripDetails({ ...tripDetails, ...tripDetailsMap });
 
-        // Create segment information with location names from trip details
         const inboundRoute: TripRoute = {
           id: inboundId,
           type: 'inbound',
@@ -240,7 +223,6 @@ export function UserDashboard() {
           }),
         };
 
-        // Добавляем в результаты поиска
         results.push({
           id: inboundId,
           departureTime: inboundRoute.departureTime,
@@ -263,14 +245,12 @@ export function UserDashboard() {
     }
   };
 
-  // Function to swap From and To locations
   const handleSwapLocations = () => {
     const tempFrom = fromLocation;
     setFromLocation(toLocation);
     setToLocation(tempFrom);
   };
 
-  // Function to handle trip selection
   const handleTripSelection = (tripId: string) => {
     if (selectedTrips.includes(tripId)) {
       setSelectedTrips(selectedTrips.filter((id) => id !== tripId));
@@ -289,14 +269,14 @@ export function UserDashboard() {
     }, 0);
   };
 
-  // Открытие модального окна оформления покупки
+  // Open the checkout modal window
   const handleOpenCheckout = () => {
     if (selectedTrips.length > 0) {
       setIsCheckoutModalOpen(true);
     }
   };
 
-  // Закрытие модального окна оформления покупки
+  // Close the checkout modal window
   const handleCloseCheckout = () => {
     setIsCheckoutModalOpen(false);
   };
@@ -436,17 +416,7 @@ export function UserDashboard() {
                 </div>
               </div>
 
-              {/* Solo ida checkbox row */}
-              <div className="mt-3 md:mt-4 flex flex-col md:flex-row justify-between items-center">
-                <Checkbox
-                  isSelected={isOneWay}
-                  onValueChange={setIsOneWay}
-                  className="mb-3 md:mb-0"
-                >
-                  Solo ida
-                </Checkbox>
-              </div>
-              <div className="w-full md:w-auto flex justify-center">
+              <div className="w-full md:w-auto flex justify-center mt-8">
                 {/* Search button */}
                 <Button
                   type="submit"
@@ -546,7 +516,7 @@ export function UserDashboard() {
                             </div>
                           </div>
 
-                          {/* Детали маршрута с пересадками */}
+                          {/* Route details with transfers */}
                           {tripsDetails[trip.id] && tripsDetails[trip.id].segments.length > 0 && (
                             <div className="border-t pt-3 mt-3">
                               <p className="text-sm font-semibold mb-2">
@@ -697,7 +667,7 @@ export function UserDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Модальное окно оформления покупки */}
+      {/* Checkout modal window */}
       <CheckoutModal
         isOpen={isCheckoutModalOpen}
         onClose={handleCloseCheckout}
