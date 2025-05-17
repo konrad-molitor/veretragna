@@ -187,7 +187,7 @@ export class TripsSearchService {
     for (const s of chain) {
       const last = legs[legs.length - 1];
 
-      // склеиваем только если тот же Trip И сегменты идут подряд
+      // merge only if it's the same Trip AND segments are in sequence
       const shouldMerge = last
     && last.tripId === s.tripId
     && last.alightSeq === s.departSeq;
