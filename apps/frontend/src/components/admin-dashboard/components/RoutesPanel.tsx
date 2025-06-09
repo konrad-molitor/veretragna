@@ -98,7 +98,7 @@ export function RoutesPanel() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentRouteId, setCurrentRouteId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<RouteFormData | undefined>(undefined);
+  const [formData, setFormData] = useState<RouteFormData | null>(null);
 
   // Fetch routes
   const fetchRoutes = async () => {
@@ -217,7 +217,7 @@ export function RoutesPanel() {
 
   // Add new route handler
   const handleAddRoute = () => {
-    setFormData(undefined);
+    setFormData(null);
     setCurrentRouteId(null);
     setIsEditing(false);
     setIsModalOpen(true);
