@@ -197,7 +197,7 @@ export function SchedulesPanel() {
       const route = routes.find((r) => r.id === schedule.route.id);
       const routeDuration = route ? calculateRouteDuration(route) : 15;
       const dayIndex = getDayIndex(schedule.dayOfWeek);
-      const dayOffset = dayIndex - 1; // Offset from Monday (0 for Monday, 1 for Tuesday, etc.)
+      const dayOffset = dayIndex === 0 ? 6 : dayIndex - 1;
       const eventDate = new Date(currentWeekStart);
       eventDate.setDate(currentWeekStart.getDate() + dayOffset);
       const [hours, minutes, seconds] = schedule.departureTime.split(':').map(Number);
