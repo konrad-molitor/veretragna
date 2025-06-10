@@ -8,6 +8,7 @@ import {
   RoutesPanel,
   SchedulesPanel,
   TripsPanel,
+  CustomTripsPanel,
 } from './components';
 
 // Main admin dashboard component that manages panel navigation
@@ -29,6 +30,8 @@ export function AdminDashboard() {
         return <SchedulesPanel />;
       case 'trips':
         return <TripsPanel />;
+      case 'custom-trips':
+        return <CustomTripsPanel />;
       default:
         return <UsersPanel />;
     }

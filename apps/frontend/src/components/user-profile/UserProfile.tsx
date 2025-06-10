@@ -14,6 +14,7 @@ import { ArrowLeftCircleIcon, CheckCircleIcon, ExclamationCircleIcon } from '@he
 import { toast } from 'react-hot-toast';
 import axiosInstance from '../../app/utils/axiosInstance';
 import UserTickets from './UserTickets';
+import UserCustomTrips from './UserCustomTrips';
 
 type UserProfileProps = {
   userId?: string;
@@ -219,6 +220,7 @@ export function UserProfile({ userId }: UserProfileProps) {
         </Card>
 
         <UserTickets />
+        <UserCustomTrips />
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ export function Sidebar({ activeItem, onItemClick }: SidebarProps) {
     { id: 'routes', label: 'Rutas' },
     { id: 'schedules', label: 'Horarios' },
     { id: 'trips', label: 'Viajes' },
+    { id: 'custom-trips', label: 'Reservas' },
   ];
 
   return (
