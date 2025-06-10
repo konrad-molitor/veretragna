@@ -158,10 +158,11 @@ export function UserDashboard() {
           totalPrice,
           segments: outbound.map((segment) => {
             const detail = tripDetailsMap[segment.tripId];
+            const routeName = detail?.schedule?.route?.name || 'Ruta desconocida';
             return {
               tripId: segment.tripId,
-              from: detail?.departureLocation || locations.find((loc) => loc.id === fromLocation)?.name || 'Unknown',
-              to: detail?.arrivalLocation || locations.find((loc) => loc.id === toLocation)?.name || 'Unknown',
+              from: routeName,
+              to: routeName,
               departureTime: new Date(segment.boardTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
               arrivalTime: new Date(segment.alightTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
               price: Number(segment.price),
@@ -212,10 +213,11 @@ export function UserDashboard() {
           totalPrice,
           segments: inbound.map((segment) => {
             const detail = tripDetailsMap[segment.tripId];
+            const routeName = detail?.schedule?.route?.name || 'Ruta desconocida';
             return {
               tripId: segment.tripId,
-              from: detail?.departureLocation || locations.find((loc) => loc.id === toLocation)?.name || 'Unknown',
-              to: detail?.arrivalLocation || locations.find((loc) => loc.id === fromLocation)?.name || 'Unknown',
+              from: routeName,
+              to: routeName,
               departureTime: new Date(segment.boardTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
               arrivalTime: new Date(segment.alightTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
               price: Number(segment.price),
@@ -529,9 +531,6 @@ export function UserDashboard() {
                                       <div>
                                         <p className="font-medium">
                                           {segment.from}
-                                          {' '}
-                                          →
-                                          {segment.to}
                                         </p>
                                         <p className="text-xs text-gray-600">
                                           {segment.departureTime}
