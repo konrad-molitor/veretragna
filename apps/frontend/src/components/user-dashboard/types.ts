@@ -52,4 +52,9 @@ export interface TripDetail {
   toLocationId: string;
   departureLocation?: string;
   arrivalLocation?: string;
+  schedule?: {
+    route?: {
+      name?: string;
+    };
+  };
 }
