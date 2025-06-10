@@ -165,7 +165,7 @@ export function UserTickets() {
                 </TableCell>
                 <TableCell>
                   <Chip
-                    color={getStatusColor(ticket.status) as any}
+                    color={getStatusColor(ticket.status) as 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'}
                     size="sm"
                     variant="flat"
                   >

@@ -4,6 +4,8 @@ import { Eta } from 'eta';
 import { emailLayoutTemplate } from './templates/emailLayout.template';
 import { confirmationTemplate } from './templates/confirmation.template';
 import { passwordResetTemplate } from './templates/passwordReset.template';
+import { paymentLinkTemplate } from './templates/paymentLink.template';
+import { paymentConfirmationTemplate } from './templates/paymentConfirmation.template';
 
 class MailerService {
   private readonly RESEND_API_KEY: string;
@@ -71,6 +73,70 @@ class MailerService {
   }
 
   /**
+   * Sends a payment link email for custom trip
+   */
+  async sendPaymentLinkEmail(
+    email: string,
+    customerName: string,
+    tripName: string,
+    description: string | undefined,
+    startDateTime: string,
+    price: number,
+    maxSeats: number,
+    paymentToken: string,
+  ): Promise<void> {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const paymentLink = `${frontendUrl}/payment/${paymentToken}`;
+
+    const subject = 'Enlace de Pago - Reserva Grupal';
+    const html = await this.renderPaymentLinkEmail({
+      customerName,
+      tripName,
+      description,
+      startDateTime,
+      price,
+      maxSeats,
+      paymentLink,
+      subject,
+    });
+
+    await this.sendMail(email, subject, html);
+  }
+
+  /**
+   * Sends a payment confirmation email for custom trip
+   */
+  async sendPaymentConfirmationEmail(
+    email: string,
+    customerName: string,
+    tripName: string,
+    description: string | undefined,
+    startDateTime: string,
+    price: number,
+    maxSeats: number,
+    route: Array<{ name: string; address: string }> | undefined,
+    paymentToken: string,
+  ): Promise<void> {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const tripUrl = `${frontendUrl}/payment/${paymentToken}`;
+
+    const subject = 'Pago Confirmado - Reserva Grupal';
+    const html = await this.renderPaymentConfirmationEmail({
+      customerName,
+      tripName,
+      description,
+      startDateTime,
+      price,
+      maxSeats,
+      route,
+      tripUrl,
+      subject,
+    });
+
+    await this.sendMail(email, subject, html);
+  }
+
+  /**
    * Renders a confirmation email using the Eta template
    */
   private async renderConfirmationEmail(data: {
@@ -117,6 +183,80 @@ class MailerService {
     } catch (error) {
       console.error('Error rendering password reset email:', error);
       throw new Error(`Failed to render password reset email: ${error.message}`);
+    }
+  }
+
+  /**
+   * Renders a payment link email using the Eta template
+   */
+  private async renderPaymentLinkEmail(data: {
+    customerName: string;
+    tripName: string;
+    description?: string;
+    startDateTime: string;
+    price: number;
+    maxSeats: number;
+    paymentLink: string;
+    subject: string;
+  }): Promise<string> {
+    try {
+      // Render the payment link email content
+      const content = await this.eta.renderString(paymentLinkTemplate, {
+        customerName: data.customerName,
+        tripName: data.tripName,
+        description: data.description,
+        startDateTime: data.startDateTime,
+        price: data.price,
+        maxSeats: data.maxSeats,
+        paymentLink: data.paymentLink,
+      });
+
+      // Render the content inside the layout
+      return this.eta.renderString(emailLayoutTemplate, {
+        content,
+        subject: data.subject,
+      });
+    } catch (error) {
+      console.error('Error rendering payment link email:', error);
+      throw new Error(`Failed to render payment link email: ${error.message}`);
+    }
+  }
+
+  /**
+   * Renders a payment confirmation email using the Eta template
+   */
+  private async renderPaymentConfirmationEmail(data: {
+    customerName: string;
+    tripName: string;
+    description?: string;
+    startDateTime: string;
+    price: number;
+    maxSeats: number;
+    route?: Array<{ name: string; address: string }>;
+    tripUrl: string;
+    subject: string;
+  }): Promise<string> {
+    try {
+      // Render the payment confirmation email content
+      const content = await this.eta.renderString(paymentConfirmationTemplate, {
+        customerName: data.customerName,
+        tripName: data.tripName,
+        description: data.description,
+        startDateTime: data.startDateTime,
+        price: data.price,
+        maxSeats: data.maxSeats,
+        route: data.route,
+        tripUrl: data.tripUrl,
+      });
+
+      // Render the content inside the layout
+      return this.eta.renderString(emailLayoutTemplate, {
+        content,
+        subject: data.subject,
+      });
+    } catch (error) {
+      console.error('Error rendering payment confirmation email:', error);
+      throw new Error(`Failed to render payment confirmation email: ${error.message}`);
     }
   }
 

@@ -11,6 +11,7 @@ import AuthForm from '../components/AuthForm';
 import EmailConfirmation from '../components/EmailConfirmation';
 import ResetPassword from '../components/ResetPassword';
 import DashboardPage from './pages/DashboardPage';
+import PaymentPage from './pages/PaymentPage';
 
 function LandingPage() {
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -86,6 +87,10 @@ export function App() {
       <Route
         path="/reset-password"
         element={<ResetPassword />}
+      />
+      <Route
+        path="/payment/:paymentToken"
+        element={<PaymentPage />}
       />
       <Route path="/dashboard">
         <Route index element={<DashboardPage />} />

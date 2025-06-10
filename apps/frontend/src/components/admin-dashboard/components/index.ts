@@ -6,3 +6,4 @@ export * from './BusesPanel';
 export * from './RoutesPanel';
 export * from './SchedulesPanel';
 export * from './TripsPanel';
+export * from './CustomTripsPanel';
