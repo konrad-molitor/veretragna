@@ -62,7 +62,7 @@ export function DashboardPage({ contentType = 'dashboard' }: DashboardPageProps)
   return (
     <DashboardLayout>
       {renderContent()}
-      <HealthCheck />
+      {user && user.type !== 'user' && <HealthCheck />}
     </DashboardLayout>
   );
 }
