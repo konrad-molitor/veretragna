@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import axiosInstance from '../utils/axiosInstance';
 
+declare global {
+  interface Window {
+    ChistaWidget?: {
+      destroy: () => void;
+    };
+  }
+}
+
 type DashboardLayoutProps = {
   children: ReactNode;
 };
@@ -58,6 +66,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
     fetchUserData();
   }, [navigate]);
+
+  useEffect(() => {
+    if (user && user.type === 'user') {
+      const script = document.createElement('script');
+      script.src = 'https://chista.ivaliev.dev/widget.js';
+      script.setAttribute('data-context-src', 'https://veretragna.ivaliev.dev/assets/veretragna-context.md');
+      script.setAttribute('data-title', 'Asistente Veretragna');
+      document.body.appendChild(script);
+
+      return () => {
+        if (window.ChistaWidget) {
+          window.ChistaWidget.destroy();
+        }
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      };
+    }
+
+    return undefined;
+  }, [user]);
 
   if (loading) {
     return (
